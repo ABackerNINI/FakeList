@@ -72,6 +72,12 @@ public:
 	_Ty &operator*() {
 		return (*_cur_node)[_cur_pos];
 	}
+	const _Ty *operator->()const {
+		return &((*_cur_node)[_cur_pos]);
+	}
+	const _Ty &operator*()const {
+		return (*_cur_node)[_cur_pos];
+	}
 	bool operator==(const iterator &right) {
 		return _cur_pos == right._cur_pos && _cur_node == right._cur_node;
 	}
@@ -139,9 +145,10 @@ public:
 	}
 	FakeList &assign(_Ty *&&elem, int n) {
 		if (_front == NULL)
-			_front = new node(elem, n, 0, NULL);
+			_front = new node(NULL, n, 0, NULL);
 		else _tidy(_front->next);
 
+		_front->data = elem;
 		elem = NULL;
 
 		_size = n;
@@ -194,7 +201,8 @@ public:
 		if (_front == NULL && _back == NULL) {
 			_front = new node(data, n, 0, NULL);
 			_back = _front;
-		}else {
+		}
+		else {
 			_back->next = new node(data, n, 0, NULL);
 			_back = _back->next;
 		}
@@ -202,13 +210,17 @@ public:
 
 		return *this;
 	}
-	FakeList& append(const _Ty &val) {}
-	FakeList& append(_Ty &&val) {}
+	FakeList& append(const _Ty &val) {
+		return append(&val, 1);
+	}
+	FakeList& append(_Ty &&val) {
+		
+	}
 
 	FakeList& push_front() {}
 	FakeList& push_back(_Ty *val, int n) { return append(val, n); }
-	FakeList& push_back(const _Ty &val) { return append(val, n); }
-	FakeList& push_back(_Ty &&val) { return append(val, n); }
+	FakeList& push_back(const _Ty &val) { return append(val); }
+	FakeList& push_back(_Ty &&val) { return append(std::move(val)); }
 
 	FakeList& pop_front() {}
 	FakeList& pop_back() {}
@@ -304,7 +316,8 @@ public:
 	}
 
 	void print(bool addLF = false) {
-
+		for (iterator it = this->begin(); it != this->end(); ++it)printf("%c", *it);
+		if (addLF)printf("\n");
 	}
 
 	string_builder& substr() {}
