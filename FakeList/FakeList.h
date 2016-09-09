@@ -6,13 +6,20 @@
 
 template<class _Ty>
 struct FakeList_node {
+public:
+	FakeList_node() :data(NULL), size(0), offset(0), next(NULL) {}
+
+	FakeList_node(_Ty *data, int size, int offset, FakeList_node *next)
+		:data(data), size(size), offset(offset), next(next) {
+	}
+	_Ty &operator[](int n) {
+		return data[n + offset];
+	}
+public:
 	_Ty *data;
 	int size;
+	int offset;
 	FakeList_node *next;
-
-	FakeList_node(_Ty *data = NULL, int size = 0, FakeList_node *next = NULL)
-		:data(data), size(size), next(next) {
-	}
 };
 
 template<class _Ty>
@@ -23,7 +30,7 @@ public:
 
 public:
 	FakeList_iterator() :_cur_pos(0), _cur_node(NULL) {}
-	FakeList_iterator(int _cur_pos, node *_cur_node) :_cur_pos(_cur_pos), _cur_node(_cur_node) {}
+	FakeList_iterator(int cur_pos, node *cur_node) :_cur_pos(cur_pos), _cur_node(cur_node) {}
 	iterator operator++() {
 		if (_cur_pos + 1 < _cur_node->size) ++_cur_pos;
 		else {
@@ -60,10 +67,10 @@ public:
 		return *this;
 	}
 	_Ty *operator->() {
-		return &(_cur_node->data[_cur_pos]);
+		return &((*_cur_node)[_cur_pos]);
 	}
 	_Ty &operator*() {
-		return _cur_node->data[_cur_pos];
+		return (*_cur_node)[_cur_pos];
 	}
 	bool operator==(const iterator &right) {
 		return _cur_pos == right._cur_pos && _cur_node == right._cur_node;
@@ -117,15 +124,13 @@ public:
 
 	FakeList &assign(const _Ty *elem, int n) {
 		if (_front == NULL)
-			_front = new node();
+			_front = new node(NULL, n, 0, NULL);
 		else _tidy(_front->next);
 
 		_Ty *data = new _Ty[n];
 		memcpy(data, elem, sizeof(_Ty)*n);
 
-		_front->size = n;
 		_front->data = data;
-		_front->next = NULL;
 
 		_size = n;
 		_back = _front;
@@ -134,12 +139,9 @@ public:
 	}
 	FakeList &assign(_Ty *&&elem, int n) {
 		if (_front == NULL)
-			_front = new node();
+			_front = new node(elem, n, 0, NULL);
 		else _tidy(_front->next);
 
-		_front->size = n;
-		_front->data = elem;
-		_front->next = NULL;
 		elem = NULL;
 
 		_size = n;
@@ -159,22 +161,22 @@ public:
 	_Ty &operator[](int n) {
 		node *tmp = _front;
 		while (tmp != NULL) {
-			if (tmp->size > n)return tmp->data[n];
+			if (tmp->size > n)return (*tmp)[n];
 
 			n -= tmp->size;
 			tmp = tmp->next;
 		}
-		throw std::out_of_range("");
+		throw std::out_of_range("FakeList");
 	}
 	const _Ty &operator[](int n) const {
 		node *tmp = _front;
 		while (tmp != NULL) {
-			if (tmp->size > n)return tmp->data[n];
+			if (tmp->size > n)return (*tmp)[n];
 
 			n -= tmp->size;
 			tmp = tmp->next;
 		}
-		throw std::out_of_range("");
+		throw std::out_of_range("FakeList");
 	}
 
 	FakeList& insert(int pos) {}
@@ -190,16 +192,12 @@ public:
 		memcpy(data, elem, sizeof(_Ty)*n);
 
 		if (_front == NULL && _back == NULL) {
-			_front = new node();
+			_front = new node(data, n, 0, NULL);
 			_back = _front;
+		}else {
+			_back->next = new node(data, n, 0, NULL);
+			_back = _back->next;
 		}
-
-		_back->next = new node();
-		_back = _back->next;
-		_back->size = n;
-		_back->data = data;
-		_back->next = NULL;
-
 		_size += n;
 
 		return *this;
@@ -286,6 +284,7 @@ public:
 
 		return *this;
 	}
+
 	string_builder &append(const char *str) {
 		FakeList::append(str, strlen(str));
 

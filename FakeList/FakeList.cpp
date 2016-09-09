@@ -14,9 +14,9 @@ int main(){
 	printf("%c\n", sb[5]);
 	cout << sb.toString() << endl;
 
-	char *s1 = new char[10];
-	strcpy(s1, "s1");
-	string_builder sb1(std::move(s1), 2);
+	char *s1 = new char[30];
+	strcpy(s1, "abcdefghijklmnopqrstuvwxyz");
+	string_builder sb1(std::move(s1));
 	cout << sb1.toString() << endl;
 	string_builder::iterator it;
 	it = sb.begin();
@@ -24,4 +24,3 @@ int main(){
 
 	return 0;
 }
-
