@@ -30,7 +30,9 @@ public:
 
 public:
 	FakeList_iterator() :_cur_pos(0), _cur_node(NULL) {}
+
 	FakeList_iterator(int cur_pos, node *cur_node) :_cur_pos(cur_pos), _cur_node(cur_node) {}
+
 	iterator operator++() {
 		if (_cur_pos + 1 < _cur_node->size) ++_cur_pos;
 		else {
@@ -40,18 +42,21 @@ public:
 
 		return *this;
 	}
+
 	iterator &operator++(int) {
 		iterator it = *this;
 		++(*this);
 
 		return it;
 	}
+
 	iterator operator+(int n) {
 		iterator it = *this;
 		it += n;
 
 		return it;
 	}
+
 	iterator &operator+=(int n) {
 		if (_cur_pos + n >= _cur_node->size) {
 			n -= (_cur_node->size - _cur_pos - 1);
@@ -66,21 +71,27 @@ public:
 
 		return *this;
 	}
+
 	_Ty *operator->() {
 		return &((*_cur_node)[_cur_pos]);
 	}
+
 	_Ty &operator*() {
 		return (*_cur_node)[_cur_pos];
 	}
-	const _Ty *operator->()const {
-		return &((*_cur_node)[_cur_pos]);
-	}
-	const _Ty &operator*()const {
-		return (*_cur_node)[_cur_pos];
-	}
+
+	//const _Ty *operator->()const {
+	//	return &((*_cur_node)[_cur_pos]);
+	//}
+
+	//const _Ty &operator*()const {
+	//	return (*_cur_node)[_cur_pos];
+	//}
+
 	bool operator==(const iterator &right) {
 		return _cur_pos == right._cur_pos && _cur_node == right._cur_node;
 	}
+
 	bool operator!=(const iterator &right) {
 		return _cur_pos != right._cur_pos || _cur_node != right._cur_node;
 	}
@@ -214,7 +225,7 @@ public:
 		return append(&val, 1);
 	}
 	FakeList& append(_Ty &&val) {
-		
+
 	}
 
 	FakeList& push_front() {}
@@ -225,25 +236,45 @@ public:
 	FakeList& pop_front() {}
 	FakeList& pop_back() {}
 
-	iterator begin()const {
+	iterator begin() const {
 		return iterator(0, _front);
 	}
-	iterator end()const {
+	iterator end() const {
 		return iterator(0, NULL);
 	}
 
-	_Ty &front() {}
-	_Ty &back() {}
+	_Ty &front() {
+		return (*_front)[0];
+	}
+
+	_Ty &back() {
+		return (*_back)[_back->size - 1];
+	}
+
 	FakeList& sublist(int begin, int end) {}
 	FakeList& sublist(iterator begin, iterator end) {}
 
 	iterator find()const {}
 
-	void swap() {}
+	void swap(FakeList &fakeList) {
+		std::swap(_size, fakeList._size);
+		std::swap(_front, fakeList._front);
+		std::swap(_back, fakeList._back);
+	}
 
-	int size() const { return _size; }
-	int length() const { return _size; }
-	bool empty() const { return _size == 0; }
+	int size() const {
+		return _size;
+	}
+
+	int length() const {
+		return _size;
+	}
+
+	int node_size()const {}
+
+	bool empty() const {
+		return _size == 0;
+	}
 
 	void clear() {
 		_tidy(_front);
@@ -253,7 +284,9 @@ public:
 		_back = NULL;
 	}
 
-	~FakeList() { clear(); }
+	~FakeList() {
+		clear();
+	}
 protected:
 	void _tidy() {
 		_size = 0;
