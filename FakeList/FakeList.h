@@ -72,12 +72,12 @@ public:
 	_Ty &operator*() {
 		return (*_cur_node)[_cur_pos];
 	}
-	const _Ty *operator->()const {
-		return &((*_cur_node)[_cur_pos]);
-	}
-	const _Ty &operator*()const {
-		return (*_cur_node)[_cur_pos];
-	}
+	//const _Ty *operator->()const {
+	//	return &((*_cur_node)[_cur_pos]);
+	//}
+	//const _Ty &operator*()const {
+	//	return (*_cur_node)[_cur_pos];
+	//}
 	bool operator==(const iterator &right) {
 		return _cur_pos == right._cur_pos && _cur_node == right._cur_node;
 	}
@@ -239,10 +239,16 @@ public:
 
 	iterator find()const {}
 
-	void swap() {}
+	void swap(FakeList &fakeList) {
+		std::swap(_size, fakeList._size);
+		std::swap(_front, fakeList._front);
+		std::swap(_back, fakeList._back);
+	}
 
 	int size() const { return _size; }
+
 	int length() const { return _size; }
+
 	bool empty() const { return _size == 0; }
 
 	void clear() {
@@ -253,7 +259,9 @@ public:
 		_back = NULL;
 	}
 
-	~FakeList() { clear(); }
+	~FakeList() { 
+		clear();
+	}
 protected:
 	void _tidy() {
 		_size = 0;
