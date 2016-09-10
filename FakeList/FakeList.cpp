@@ -21,7 +21,9 @@ int main(){
 	string_builder::iterator it;
 	it = sb.begin();
 	for (; it != sb.end(); ++it)printf("%c\n", *it);
-	sb1.print();
+	sb1.print(true);
+
+	printf("%c %c, %c %c\n", sb.front(), sb.back(), sb1.front(), sb1.back());
 
 	return 0;
 }
