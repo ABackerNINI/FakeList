@@ -5,11 +5,25 @@
 #include <string>
 
 template<class _Ty>
-struct FakeList_node {
+class FakeList_Ptr {
 public:
-	FakeList_node() :data(NULL), size(0), offset(0),ref(0), next(NULL) {}
+	FakeList_Ptr() :ref(0), data(NULL) {}
+	FakeList_Ptr(_Ty *data):ref(1),data(data) {}
 
-	FakeList_node(_Ty *data, int size, int offset,int ref, FakeList_node *next)
+public:
+	int ref;
+	_Ty *data;
+};
+
+template<class _Ty>
+class FakeList_node {
+public:
+	typedef FakeList_Ptr<_Ty> Ptr;
+
+public:
+	FakeList_node() :data(NULL), size(0), offset(0), next(NULL) {}
+
+	FakeList_node(_Ty *data, int size, int offset, FakeList_node *next)
 		:data(data), size(size), offset(offset), next(next) {
 	}
 	_Ty &operator[](int n) {
@@ -19,7 +33,6 @@ public:
 	_Ty *data;
 	int size;
 	int offset;
-	int ref;
 	FakeList_node *next;
 };
 
