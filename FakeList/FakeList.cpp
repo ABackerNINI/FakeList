@@ -4,7 +4,14 @@
 
 using namespace std;
 
+class A {
+	void a() {}
+	void b() {}
+};
+
 int main(){
+	cout << sizeof(A) << endl;
+
 	string_builder sb;
 	char *s = new char[15];
 	strcpy(s, "1234567890");
