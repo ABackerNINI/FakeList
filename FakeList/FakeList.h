@@ -7,9 +7,9 @@
 template<class _Ty>
 struct FakeList_node {
 public:
-	FakeList_node() :data(NULL), size(0), offset(0), next(NULL) {}
+	FakeList_node() :data(NULL), size(0), offset(0),ref(0), next(NULL) {}
 
-	FakeList_node(_Ty *data, int size, int offset, FakeList_node *next)
+	FakeList_node(_Ty *data, int size, int offset,int ref, FakeList_node *next)
 		:data(data), size(size), offset(offset), next(next) {
 	}
 	_Ty &operator[](int n) {
@@ -19,6 +19,7 @@ public:
 	_Ty *data;
 	int size;
 	int offset;
+	int ref;
 	FakeList_node *next;
 };
 
@@ -39,7 +40,6 @@ public:
 			_cur_node = _cur_node->next;
 			_cur_pos = 0;
 		}
-
 		return *this;
 	}
 
@@ -167,7 +167,9 @@ public:
 
 		return *this;
 	}
+
 	FakeList &assign(const FakeList &right) {}
+
 	FakeList &assign(FakeList &&right) {
 		std::swap(_size, right._size);
 		std::swap(_front, right._front);
@@ -233,7 +235,13 @@ public:
 	FakeList& push_back(const _Ty &val) { return append(val); }
 	FakeList& push_back(_Ty &&val) { return append(std::move(val)); }
 
-	FakeList& pop_front() {}
+	FakeList& pop_front() {
+		++_front->offset;
+		if (_front->offset == _front->size) {
+
+			_front = _front->next;
+		}
+	}
 	FakeList& pop_back() {}
 
 	iterator begin() const {
@@ -298,7 +306,7 @@ protected:
 		while (first != NULL) {
 			tmp = first->next;
 
-			if (first->data)
+			if (first->offset == 0 && first->data)
 				delete[]first->data;
 			delete first;
 
