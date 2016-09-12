@@ -1,14 +1,36 @@
+#pragma once
+
 //
 //	Created by ABacker on 9/5/2016
 //
 
+#ifndef _FAKELIST_ABACKER_H_
+#define _FAKELIST_ABACKER_H_
+
 #include <string>
+#include <assert.h>
+
+#define DEBUG						0x1111		
+#define DEBUG_RANGE_CHECK			0x0001
+#define DEBUG_UNKOWN_ERR_CHECK		0x0010
+#define DEBUG_NEW_DELET_CHECK		0x0100
+#define DEBUG_COUT_ERR_INF			0x1000
 
 template<class _Ty>
 class FakeList_Ptr {
 public:
-	FakeList_Ptr() :ref(0), data(NULL) {}
-	FakeList_Ptr(_Ty *data):ref(1),data(data) {}
+	FakeList_Ptr() :ref(0), data(NULL) {
+	}
+
+	FakeList_Ptr(_Ty *data) :ref(1), data(data) {
+	}
+
+	~FakeList_Ptr() {
+#if(DEBUG & DEBUG_UNKOWN_ERR_CHECK)
+		assert(ref > 0);
+#endif;
+		if (data)delete[] data;
+	}
 
 public:
 	int ref;
@@ -19,20 +41,111 @@ template<class _Ty>
 class FakeList_node {
 public:
 	typedef FakeList_Ptr<_Ty> Ptr;
+	typedef FakeList_node<_Ty> node;
 
 public:
-	FakeList_node() :data(NULL), size(0), offset(0), next(NULL) {}
-
-	FakeList_node(_Ty *data, int size, int offset, FakeList_node *next)
-		:data(data), size(size), offset(offset), next(next) {
+	FakeList_node() {
+		_tidy();
 	}
+
+	FakeList_node(_Ty *data, int size, int offset = 0, node *next = NULL)
+		:ptr(new Ptr(data)), size(size), offset(offset), next(next) {
+	}
+
+	FakeList_node(const node &node) {
+		size = node.size;
+		offset = node.offset;
+		ptr = node.ptr;
+		next = node.next;
+
+		if (ptr)++ptr->ref;
+	}
+
+	FakeList_node(node &&node) {
+		size = node.size;
+		offset = node.offset;
+		ptr = node.ptr;
+		next = node.next;
+
+		node._tidy();
+	}
+
+	node &operator=(const node &right) {
+		_dis();
+
+		size = right.size;
+		offset = right.offset;
+		ptr = right.ptr;
+		next = right.next;
+
+		if (ptr)++ptr->ref;
+
+		return *this;
+	}
+
+	node &operator=(node &&right) {
+		_dis();
+
+		size = right.size;
+		offset = right.offset;
+		ptr = right.ptr;
+		next = right.next;
+
+		right._tidy();
+
+		return *this;
+	}
+
+	node &assign(_Ty *data, int size, int offset = 0, node *next = NULL) {
+		if (ptr && (--ptr->ref == 0)) {
+			delete[] ptr->data;
+			this->ptr->data = data;
+			this->ptr->ref = 1;
+		}
+		else ptr = new Ptr(data);
+
+		this->size = size;
+		this->offset = offset;
+		this->next = next;
+
+		return *this;
+	}
+
+	node &swap(const node &node) {
+		std::swap(size, node.size);
+		std::swap(offset, node.offset);
+		std::swap(ptr, node.ptr);
+		std::swap(next, node.next);
+
+		return *this;
+	}
+
 	_Ty &operator[](int n) {
-		return data[n + offset];
+		return ptr->data[n + offset];
 	}
+
+	~FakeList_node() {
+		_dis();
+	}
+
+protected:
+	void _tidy() {
+		size = 0;
+		offset = 0;
+		next = NULL;
+		ptr = NULL;
+	}
+
+	void _dis() {
+		if (ptr && (--ptr->ref == 0)) {
+			delete ptr;
+		}
+	}
+
 public:
-	_Ty *data;
 	int size;
 	int offset;
+	FakeList_Ptr<_Ty> *ptr;
 	FakeList_node *next;
 };
 
@@ -43,9 +156,12 @@ public:
 	typedef FakeList_iterator<_Ty> iterator;
 
 public:
-	FakeList_iterator() :_cur_pos(0), _cur_node(NULL) {}
+	FakeList_iterator() :_cur_pos(0), _cur_node(NULL) {
+	}
 
-	FakeList_iterator(int cur_pos, node *cur_node) :_cur_pos(cur_pos), _cur_node(cur_node) {}
+	FakeList_iterator(int cur_pos, node *cur_node)
+		:_cur_pos(cur_pos), _cur_node(cur_node) {
+	}
 
 	iterator operator++() {
 		if (_cur_pos + 1 < _cur_node->size) ++_cur_pos;
@@ -93,14 +209,6 @@ public:
 		return (*_cur_node)[_cur_pos];
 	}
 
-	//const _Ty *operator->()const {
-	//	return &((*_cur_node)[_cur_pos]);
-	//}
-
-	//const _Ty &operator*()const {
-	//	return (*_cur_node)[_cur_pos];
-	//}
-
 	bool operator==(const iterator &right) {
 		return _cur_pos == right._cur_pos && _cur_node == right._cur_node;
 	}
@@ -108,6 +216,7 @@ public:
 	bool operator!=(const iterator &right) {
 		return _cur_pos != right._cur_pos || _cur_node != right._cur_node;
 	}
+
 protected:
 	int _cur_pos;
 	node *_cur_node;
@@ -135,10 +244,10 @@ public:
 	}
 
 	//mark:private
-	FakeList(const FakeList &right) {
-		_tidy();
-		assign(right);
-	}
+	//FakeList(const FakeList &right) {
+	//	_tidy();
+	//	assign(right);
+	//}
 
 	FakeList(FakeList &&right) {
 		_tidy();
@@ -146,21 +255,21 @@ public:
 	}
 
 	FakeList &operator=(const FakeList &right) {
-		assign(right);
+		return assign(right);
 	}
 	FakeList &operator=(FakeList &&right) {
-		assign(std::move(right));
+		return assign(std::move(right));
 	}
 
 	FakeList &assign(const _Ty *elem, int n) {
 		if (_front == NULL)
-			_front = new node(NULL, n, 0, NULL);
+			_front = new node(NULL, n);
 		else _tidy(_front->next);
 
 		_Ty *data = new _Ty[n];
 		memcpy(data, elem, sizeof(_Ty)*n);
 
-		_front->data = data;
+		_front->ptr->data = data;
 
 		_size = n;
 		_back = _front;
@@ -169,10 +278,10 @@ public:
 	}
 	FakeList &assign(_Ty *&&elem, int n) {
 		if (_front == NULL)
-			_front = new node(NULL, n, 0, NULL);
+			_front = new node(NULL, n);
 		else _tidy(_front->next);
 
-		_front->data = elem;
+		_front->ptr-> = elem;
 		elem = NULL;
 
 		_size = n;
@@ -181,7 +290,7 @@ public:
 		return *this;
 	}
 
-	FakeList &assign(const FakeList &right) {}
+	//FakeList &assign(const FakeList &right) {}
 
 	FakeList &assign(FakeList &&right) {
 		std::swap(_size, right._size);
@@ -308,6 +417,7 @@ public:
 	~FakeList() {
 		clear();
 	}
+
 protected:
 	void _tidy() {
 		_size = 0;
@@ -375,5 +485,8 @@ public:
 	}
 
 	string_builder& substr() {}
+
 protected:
 };
+
+#endif //_FAKELIST_ABACKER_H_
