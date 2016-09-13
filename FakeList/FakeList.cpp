@@ -5,40 +5,52 @@
 using namespace std;
 using namespace nini;
 
-int main(){
+string_builder build() {
 	string_builder sb;
 	char *s = new char[15];
 	strcpy(s, "1234567890");
-	sb.assign(std::move(s),strlen(s));
-	printf("%c\n", sb[1]);
+	sb.assign(std::move(s), strlen(s));
+
 	sb.append("1234567890");
-	printf("%c\n", sb[5]);
-	cout << sb.to_string() << endl;
+
 	sb.insert("aacc", 4, 10);
 	sb.insert("ddeeff", 6, 4);
 	sb.insert("cccc", 4, 6);
-	cout << sb.to_string() << endl;
-	sb.print(true);
+
 	auto it_insert = sb.begin();
 	it_insert += 4;
 	sb.insert("bbb", 3, it_insert);
-	//for (auto it = sb.begin(); it != sb.end(); ++it)printf("%c\n", *it);
 	sb.print(true);
+
+	return sb;
+}
+
+void test1() {
+	string_builder sb = build();
 
 	printf("%c %c\n", sb.front(), sb.back());
 
-	while(!sb.empty()) {
-		sb.pop_front();
+	while (!sb.empty()) {
+		sb.pop_back();
 		sb.print(true);
 	}
+}
 
+void test3() {
+	
+}
+
+void test2() {
 	char *s1 = new char[30];
 	strcpy(s1, "abcdefghijklmnopqrstuvwxyz");
 	string_builder sb1(std::move(s1));
 	cout << sb1.to_string() << endl;
 
 	sb1.print(true);
+}
 
+int main(){
+	test1();
 
 	return 0;
 }
