@@ -3,15 +3,9 @@
 #include <iostream>
 
 using namespace std;
-
-class A {
-	void a() {}
-	void b() {}
-};
+using namespace nini;
 
 int main(){
-	cout << sizeof(A) << endl;
-
 	string_builder sb;
 	char *s = new char[15];
 	strcpy(s, "1234567890");
@@ -19,6 +13,8 @@ int main(){
 	printf("%c\n", sb[1]);
 	sb.append("1234567890");
 	printf("%c\n", sb[5]);
+	cout << sb.toString() << endl;
+	sb.insert("aacc", 4, 3);
 	cout << sb.toString() << endl;
 
 	char *s1 = new char[30];
@@ -34,3 +30,21 @@ int main(){
 
 	return 0;
 }
+//
+//long long fact[150];
+//
+//long long factorail() {
+//	fact[0] = 1;
+//	for (long long i = 1; i < 130;++i) {
+//		fact[i] = (fact[i - 1] * i)%1000000000000000;
+//	}
+//
+//	return fact[125];
+//}
+//
+//int main() {
+//	cout << factorail() << endl;
+//
+//
+//	return 0;
+//}
