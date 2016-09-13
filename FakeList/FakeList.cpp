@@ -13,11 +13,11 @@ int main(){
 	printf("%c\n", sb[1]);
 	sb.append("1234567890");
 	printf("%c\n", sb[5]);
-	cout << sb.toString() << endl;
+	cout << sb.to_string() << endl;
 	sb.insert("aacc", 4, 10);
 	sb.insert("ddeeff", 6, 4);
 	sb.insert("cccc", 4, 6);
-	cout << sb.toString() << endl;
+	cout << sb.to_string() << endl;
 	sb.print(true);
 	auto it_insert = sb.begin();
 	it_insert += 4;
@@ -28,7 +28,7 @@ int main(){
 	char *s1 = new char[30];
 	strcpy(s1, "abcdefghijklmnopqrstuvwxyz");
 	string_builder sb1(std::move(s1));
-	cout << sb1.toString() << endl;
+	cout << sb1.to_string() << endl;
 
 	sb1.print(true);
 
@@ -36,21 +36,3 @@ int main(){
 
 	return 0;
 }
-//
-//long long fact[150];
-//
-//long long factorail() {
-//	fact[0] = 1;
-//	for (long long i = 1; i < 130;++i) {
-//		fact[i] = (fact[i - 1] * i)%1000000000000000;
-//	}
-//
-//	return fact[125];
-//}
-//
-//int main() {
-//	cout << factorail() << endl;
-//
-//
-//	return 0;
-//}
