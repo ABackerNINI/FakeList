@@ -4,63 +4,65 @@
 //	Created by ABacker on 9/5/2016
 //
 
-#ifndef _FAKELIST_ABACKER_H_
-#define _FAKELIST_ABACKER_H_
+#ifndef _FAKELIST_ABACKER_NINI_H_
+#define _FAKELIST_ABACKER_NINI_H_
 
 #include <string>
 #include <assert.h>
 
-#define DEBUG						0x1111		
-#define DEBUG_RANGE_CHECK			0x0001
-#define DEBUG_UNKOWN_ERR_CHECK		0x0010
-#define DEBUG_NEW_DELET_CHECK		0x0100
-#define DEBUG_COUT_ERR_INF			0x1000
+#define _NINI_BEGIN namespace nini {
+#define _NINI_END }
 
-template <class _Ty>
-class FakeList_Ptr
-{
+_NINI_BEGIN
+
+#define DEBUG						0x11111		
+#define DEBUG_RANGE_CHECK			0x00001
+#define DEBUG_UNKOWN_ERR_CHECK		0x00010
+#define DEBUG_NEW_DELET_CHECK		0x00100
+#define DEBUG_COUT_ERR_INF			0x01000
+#define DEBUG_PRINT_NODE			0x10000
+
+typedef int size_type;
+
+template<class _Ty>class FakeList;
+
+template<class _Ty>
+class FakeList_Ptr {
 public:
-	FakeList_Ptr() : ref(0), data(NULL)
-	{
+	FakeList_Ptr() :ref(0), data(NULL) {
 	}
 
-	FakeList_Ptr(_Ty* data) : ref(1), data(data)
-	{
+	FakeList_Ptr(_Ty *data) :ref(1), data(data) {
 	}
 
-	~FakeList_Ptr()
-	{
+	~FakeList_Ptr() {
 #if(DEBUG & DEBUG_UNKOWN_ERR_CHECK)
-		assert(ref > 0);
-#endif;
-		if (data)delete[] data;
+		assert(ref == 0);
+#endif
+		if (data)
+			delete[] data;
 	}
 
 public:
 	int ref;
-	_Ty* data;
+	_Ty *data;
 };
 
-template <class _Ty>
-class FakeList_node
-{
+template<class _Ty>
+class FakeList_node {
 public:
 	typedef FakeList_Ptr<_Ty> Ptr;
 	typedef FakeList_node<_Ty> node;
-
 public:
 	FakeList_node()
-	{
-		_tidy();
+		:ptr(NULL), size(0), offset(0), next(NULL) {
 	}
 
-	FakeList_node(_Ty* data, int size, int offset = 0, node* next = NULL)
-		: ptr(new Ptr(data)), size(size), offset(offset), next(next)
-	{
+	FakeList_node(_Ty *data, int size, int offset = 0, node *next = NULL)
+		:ptr(new Ptr(data)), size(size), offset(offset), next(next) {
 	}
 
-	FakeList_node(const node& node)
-	{
+	FakeList_node(const node &node) {
 		size = node.size;
 		offset = node.offset;
 		ptr = node.ptr;
@@ -69,8 +71,7 @@ public:
 		if (ptr)++ptr->ref;
 	}
 
-	FakeList_node(node&& node)
-	{
+	FakeList_node(node &&node) {
 		size = node.size;
 		offset = node.offset;
 		ptr = node.ptr;
@@ -79,8 +80,7 @@ public:
 		node._tidy();
 	}
 
-	node& operator=(const node& right)
-	{
+	node &operator=(const node &right) {
 		_dis();
 
 		size = right.size;
@@ -90,11 +90,10 @@ public:
 
 		if (ptr)++ptr->ref;
 
-		return *this;
+		return (*this);
 	}
 
-	node& operator=(node&& right)
-	{
+	node &operator=(node &&right) {
 		_dis();
 
 		size = right.size;
@@ -104,13 +103,11 @@ public:
 
 		right._tidy();
 
-		return *this;
+		return (*this);
 	}
 
-	node& assign(_Ty* data, int size, int offset = 0, node* next = NULL)
-	{
-		if (ptr && (--ptr->ref == 0))
-		{
+	node &assign(_Ty *data, int size, int offset = 0, node *next = NULL) {
+		if (ptr && (--ptr->ref == 0)) {
 			delete[] ptr->data;
 			this->ptr->data = data;
 			this->ptr->ref = 1;
@@ -121,42 +118,40 @@ public:
 		this->offset = offset;
 		this->next = next;
 
-		return *this;
+		return (*this);
 	}
 
-	node& swap(const node& node)
-	{
+	node &swap(const node &node) {
 		std::swap(size, node.size);
 		std::swap(offset, node.offset);
 		std::swap(ptr, node.ptr);
 		std::swap(next, node.next);
 
-		return *this;
+		return (*this);
 	}
 
-	_Ty& operator[](int n)
-	{
-		return ptr->data[n + offset];
+	_Ty &operator[](int pos) {
+#if(DEBUG & DEBUG_RANGE_CHECK)
+		if (pos + 1 > size || pos < 0)
+			throw std::out_of_range("FakeList");
+#endif
+		return ptr->data[pos + offset];
 	}
 
-	~FakeList_node()
-	{
+	~FakeList_node() {
 		_dis();
 	}
 
 protected:
-	void _tidy()
-	{
+	void _tidy() {
 		size = 0;
 		offset = 0;
 		next = NULL;
 		ptr = NULL;
 	}
 
-	void _dis()
-	{
-		if (ptr && (--ptr->ref == 0))
-		{
+	void _dis() {
+		if (ptr && (--ptr->ref == 0)) {
 			delete ptr;
 		}
 	}
@@ -164,119 +159,108 @@ protected:
 public:
 	int size;
 	int offset;
-	FakeList_Ptr<_Ty>* ptr;
-	FakeList_node* next;
+	FakeList_node *next;
+protected:
+	FakeList_Ptr<_Ty> *ptr;
 };
 
-template <class _Ty>
-class FakeList_iterator
-{
+template<class _Ty>
+class FakeList_iterator {
 public:
 	typedef FakeList_node<_Ty> node;
 	typedef FakeList_iterator<_Ty> iterator;
+	friend class FakeList<_Ty>;
 
 public:
-	FakeList_iterator() : _cur_pos(0), _cur_node(NULL)
-	{
+	FakeList_iterator()
+		:_cur_pos(0), _cur_node(NULL) {
 	}
 
-	FakeList_iterator(int cur_pos, node* cur_node)
-		: _cur_pos(cur_pos), _cur_node(cur_node)
-	{
+	FakeList_iterator(int cur_pos, node *cur_node)
+		:_cur_pos(cur_pos), _cur_node(cur_node) {
 	}
 
-	iterator operator++()
-	{
+	iterator operator++() {
 		if (_cur_pos + 1 < _cur_node->size) ++_cur_pos;
-		else
-		{
+		else {
 			_cur_node = _cur_node->next;
 			_cur_pos = 0;
+
+#if(DEBUG & DEBUG_PRINT_NODE)
+			printf(",");
+#endif
 		}
-		return *this;
+		return (*this);
 	}
 
-	iterator& operator++(int)
-	{
+	iterator &operator++(int) {
 		iterator it = *this;
 		++(*this);
 
 		return it;
 	}
 
-	iterator operator+(int n)
-	{
+	iterator operator+(int n) {
 		iterator it = *this;
 		it += n;
 
 		return it;
 	}
 
-	iterator& operator+=(int n)
-	{
-		if (_cur_pos + n >= _cur_node->size)
-		{
+	iterator &operator+=(int n) {
+		if (_cur_pos + n >= _cur_node->size) {
 			n -= (_cur_node->size - _cur_pos - 1);
 			_cur_pos = 0;
 		}
 
-		while (_cur_pos + n >= _cur_node->size)
-		{
+		while (_cur_pos + n >= _cur_node->size) {
 			n -= _cur_node->size;
 			_cur_node = _cur_node->next;
 		}
 		_cur_pos += n;
 
-		return *this;
+		return (*this);
 	}
 
-	_Ty* operator->()
-	{
+	_Ty *operator->() {
 		return &((*_cur_node)[_cur_pos]);
 	}
 
-	_Ty& operator*()
-	{
+	_Ty &operator*() {
 		return (*_cur_node)[_cur_pos];
 	}
 
-	bool operator==(const iterator& right)
-	{
+	bool operator==(const iterator &right) {
 		return _cur_pos == right._cur_pos && _cur_node == right._cur_node;
 	}
 
-	bool operator!=(const iterator& right)
-	{
+	bool operator!=(const iterator &right) {
 		return _cur_pos != right._cur_pos || _cur_node != right._cur_node;
 	}
 
-protected:
+private:
 	int _cur_pos;
-	node* _cur_node;
+	node *_cur_node;
 };
 
-template <class _Ty>
-class FakeList
-{
+template<class _Ty>
+class FakeList {
 public:
 	typedef FakeList_node<_Ty> node;
 	typedef FakeList_iterator<_Ty> iterator;
 
 public:
 	FakeList()
-	{
-		_tidy();
+		:_size(0), _front(NULL), _back(NULL) {
 	}
 
-	FakeList(const _Ty* elem, int n)
-	{
-		_tidy();
+	FakeList(const _Ty *elem, int n)
+		:_size(0), _front(NULL), _back(NULL) {
 		assign(elem, n);
 	}
 
-	FakeList(_Ty*&& elem, int n)
-	{
-		_tidy();
+	FakeList(_Ty *&&elem, int n)
+		:_size(0), _front(NULL), _back(NULL) {
 		assign(std::move(elem), n);
 	}
 
@@ -286,32 +270,28 @@ public:
 	//	assign(right);
 	//}
 
-	FakeList(FakeList&& right)
-	{
-		_tidy();
+	FakeList(FakeList &&right)
+		:_size(0), _front(NULL), _back(NULL) {
 		assign(std::move(right));
 	}
 
-	FakeList& operator=(const FakeList& right)
-	{
+	FakeList &operator=(const FakeList &right) {
 		return assign(right);
 	}
-
-	FakeList& operator=(FakeList&& right)
-	{
+	FakeList &operator=(FakeList &&right) {
 		return assign(std::move(right));
 	}
 
-	FakeList& assign(const _Ty* elem, int n)
-	{
-		if (_front == NULL)
-			_front = new node(NULL, n);
-		else _tidy(_front->next);
+	FakeList &assign(const _Ty *elem, int n) {
+		_Ty *data = new _Ty[n];
+		memcpy(data, elem, sizeof(_Ty)*n);
 
-		_Ty* data = new _Ty[n];
-		memcpy(data, elem, sizeof(_Ty) * n);
-
-		_front->ptr->data = data;
+		if(_front == NULL)
+			_front = new node(data, n);
+		else {
+			_tidy(_front->next);
+			_front->assign(data, n);
+		}
 
 		_size = n;
 		_back = _front;
@@ -319,13 +299,14 @@ public:
 		return *this;
 	}
 
-	FakeList& assign(_Ty*&& elem, int n)
-	{
+	FakeList &assign(_Ty *&&elem, int n) {
 		if (_front == NULL)
-			_front = new node(NULL, n);
-		else _tidy(_front->next);
+			_front = new node(elem, n);
+		else {
+			_tidy(_front->next);
+			_front->assign(elem, n, 0, NULL);
+		}
 
-		_front->ptr-> = elem;
 		elem = NULL;
 
 		_size = n;
@@ -336,8 +317,7 @@ public:
 
 	//FakeList &assign(const FakeList &right) {}
 
-	FakeList& assign(FakeList&& right)
-	{
+	FakeList &assign(FakeList &&right) {
 		std::swap(_size, right._size);
 		std::swap(_front, right._front);
 		std::swap(_back, right._back);
@@ -345,166 +325,208 @@ public:
 		return *this;
 	}
 
-	_Ty& operator[](int n)
-	{
-		node* tmp = _front;
-		while (tmp != NULL)
-		{
-			if (tmp->size > n)return (*tmp)[n];
+	_Ty &operator[](int pos) {
 
-			n -= tmp->size;
+#if(DEBUG & DEBUG_RANGE_CHECK)
+		if (pos + 1 > _size || pos < 0)
+			throw std::out_of_range("FakeList");
+#endif
+
+		node *tmp = _front;
+		while (tmp != NULL) {
+			if (tmp->size > pos)
+				return (*tmp)[pos];
+
+			pos -= tmp->size;
 			tmp = tmp->next;
 		}
 		throw std::out_of_range("FakeList");
 	}
 
-	const _Ty& operator[](int n) const
-	{
-		node* tmp = _front;
-		while (tmp != NULL)
-		{
-			if (tmp->size > n)return (*tmp)[n];
+	const _Ty &operator[](int pos) const {
 
-			n -= tmp->size;
+#if(DEBUG & DEBUG_RANGE_CHECK)
+		if (pos + 1 > _size || pos < 0)
+			throw std::out_of_range("FakeList");
+#endif
+		node *tmp = _front;
+		while (tmp != NULL) {
+			if (tmp->size > pos)
+				return (*tmp)[pos];
+
+			pos -= tmp->size;
 			tmp = tmp->next;
 		}
 		throw std::out_of_range("FakeList");
 	}
 
-	FakeList& insert(int pos)
-	{
+	FakeList& insert(const _Ty *elem, int n, int pos) {
+
+#if(DEBUG & DEBUG_RANGE_CHECK)
+		if (pos <= 0)return push_front();
+
+		if (pos > _size)return append(elem, n);
+#endif
+		_Ty *data = new _Ty[n];
+		memcpy(data, elem, sizeof(_Ty)*n);
+
+		node *tmp = _front;
+		while (tmp != NULL) {
+			if (tmp->size >= pos) {
+				_insert(data, n, tmp, pos);
+				break;
+			}
+			pos -= tmp->size;
+			tmp = tmp->next;
+		}
+		_size += n;
+
+		return (*this);
 	}
+	FakeList& erase(int begin, int end) {
 
-	FakeList& erase(int begin, int end)
-	{
 	}
+	FakeList& replace(int begin, int end, _Ty *val, int n) {}
 
-	FakeList& replace(int begin, int end, _Ty* val, int n)
-	{
+	FakeList& insert(const _Ty *elem, int n, iterator pos) {
+		
+#if(DEBUG & DEBUG_RANGE_CHECK)
+		if (pos == this->begin())return push_front();
+
+		if (pos == this->end())return append(elem, n);
+#endif
+		_Ty *data = new _Ty[n];
+		memcpy(data, elem, sizeof(_Ty)*n);
+
+		_insert(data, n, pos._cur_node, pos._cur_pos);
+
+		_size += n;
+
+		return (*this);
 	}
+	//FakeList& erase(iterator begin, iterator end) {}
+	//FakeList& replace(iterator begin, iterator end, _Ty *val, int n) {}
 
-	FakeList& insert(iterator pos)
-	{
-	}
+	FakeList& append(const _Ty *elem, int n) {
+		_Ty *data = new _Ty[n];
+		memcpy(data, elem, sizeof(_Ty)*n);
 
-	FakeList& erase(iterator begin, iterator end)
-	{
-	}
-
-	FakeList& replace(iterator begin, iterator end, _Ty* val, int n)
-	{
-	}
-
-	FakeList& append(const _Ty* elem, int n)
-	{
-		_Ty* data = new _Ty[n];
-		memcpy(data, elem, sizeof(_Ty) * n);
-
-		if (_front == NULL && _back == NULL)
-		{
-			_front = new node(data, n, 0, NULL);
+		if (_front == NULL) {
+			_front = new node(data, n);
 			_back = _front;
 		}
-		else
-		{
-			_back->next = new node(data, n, 0, NULL);
+		else {
+			_back->next = new node(data, n);
 			_back = _back->next;
 		}
 		_size += n;
 
-		return *this;
+		return (*this);
 	}
 
-	FakeList& append(const _Ty& val)
-	{
+	FakeList& append(const _Ty *&&elem, int n) {
+		if (_front == NULL) {
+			_front = new node(elem, n);
+			_back = _front;
+		}
+		else {
+			_back->next = new node(elem, n);
+			_back = _back->next;
+		}
+		_size += n;
+
+		return (*this);
+	}
+
+	FakeList& append(const _Ty &val) {
 		return append(&val, 1);
 	}
 
-	FakeList& append(_Ty&& val)
-	{
+	FakeList& append(_Ty &&val) {
+		return append(std::move(&val), 1);
 	}
 
-	FakeList& push_front()
-	{
+	FakeList& push_front() {
+		
+		return (*this);
 	}
 
-	FakeList& push_back(_Ty* val, int n) { return append(val, n); }
-	FakeList& push_back(const _Ty& val) { return append(val); }
-	FakeList& push_back(_Ty&& val) { return append(std::move(val)); }
-
-	FakeList& pop_front()
-	{
-		++_front->offset;
-		if (_front->offset == _front->size)
-		{
-			_front = _front->next;
-		}
+	FakeList& push_back(_Ty *val, int n) {
+		return append(val, n);
 	}
 
-	FakeList& pop_back()
-	{
+	FakeList& push_back(const _Ty &val) {
+		return append(val);
 	}
 
-	iterator begin() const
-	{
+	FakeList& push_back(_Ty &&val) {
+		return append(std::move(val));
+	}
+
+	FakeList& pop_front() {
+		/*++_front->offset;
+		if (_front->offset == _front->size) {
+
+		_front = _front->next;
+		}*/
+	}
+	FakeList& pop_back() {}
+
+	iterator begin() const {
 		return iterator(0, _front);
 	}
 
-	iterator end() const
-	{
+	iterator end() const {
 		return iterator(0, NULL);
 	}
 
-	_Ty& front()
-	{
+	_Ty &front() {
 		return (*_front)[0];
 	}
 
-	_Ty& back()
-	{
+	const _Ty &front() const {
+		return (*_front)[0];
+	}
+
+	_Ty &back() {
 		return (*_back)[_back->size - 1];
 	}
 
-	FakeList& sublist(int begin, int end)
-	{
+	const _Ty &back() const {
+		return (*_back)[_back->size - 1];
 	}
 
-	FakeList& sublist(iterator begin, iterator end)
-	{
-	}
 
-	iterator find() const
-	{
-	}
+	FakeList& sublist(int begin, int end) {}
+	FakeList& sublist(iterator begin, iterator end) {}
 
-	void swap(FakeList& fakeList)
-	{
+	iterator find()const {}
+
+	void swap(FakeList &fakeList) {
 		std::swap(_size, fakeList._size);
 		std::swap(_front, fakeList._front);
 		std::swap(_back, fakeList._back);
 	}
 
-	int size() const
-	{
+	int format(int size_of_each_node = 1000000 / sizeof(_Ty)) {
+
+	}
+
+	int size() const {
 		return _size;
 	}
 
-	int length() const
-	{
+	int length() const {
 		return _size;
 	}
 
-	int node_size() const
-	{
-	}
+	int node_size()const {}
 
-	bool empty() const
-	{
+	bool empty() const {
 		return _size == 0;
 	}
 
-	void clear()
-	{
+	void clear() {
 		_tidy(_front);
 
 		_size = 0;
@@ -512,102 +534,108 @@ public:
 		_back = NULL;
 	}
 
-	~FakeList()
-	{
+	~FakeList() {
 		clear();
 	}
 
 protected:
-	void _tidy()
-	{
+	void _tidy() {
 		_size = 0;
 		_front = NULL;
 		_back = NULL;
 	}
-
-	void _tidy(node* first)
-	{
-		node* tmp;
-		while (first != NULL)
-		{
+	void _tidy(node *first) {
+		node *tmp;
+		while (first != NULL) {
 			tmp = first->next;
 
-			if (first->offset == 0 && first->data)
-				delete[]first->data;
+			/*if (first->offset == 0 && first->ptr->data)
+				delete[]first->ptr->data;*/
 			delete first;
 
 			first = tmp;
 		}
 	}
+	void _insert(_Ty *data,int n, node *_node, int pos) {
+		node *insert_node = new node(data, n);
+		if (_node->size == pos) {
+			insert_node->next = _node->next;
+			_node->next = insert_node;
+		}
+		else {
+			node *seperat_node = new node(*_node);
+
+			seperat_node->offset = pos;
+			seperat_node->size = _node->size - pos;
+			_node->size = pos;
+
+			seperat_node->next = _node->next;
+			_node->next = insert_node;
+			insert_node->next = seperat_node;
+		}
+	}
 
 protected:
 	int _size;
-	node* _front;
-	node* _back;
+	node *_front;
+	node *_back;
 };
 
-class string_builder :public FakeList<char>
-{
+class string_builder :public FakeList<char> {
 public:
-	string_builder() : FakeList()
-	{
+	string_builder() :FakeList() {
 	}
 
-	string_builder(const char* str) : FakeList(str, strlen(str))
-	{
+	string_builder(const char *str)
+		:FakeList(str, strlen(str)) {
 	}
 
-	string_builder(const char* str, int n) : FakeList(str, n)
-	{
+	string_builder(const char *str, int n)
+		:FakeList(str, n) {
 	}
 
-	string_builder(char*&& str) : FakeList(std::move(str), strlen(str))
-	{
+	string_builder(char *&&str)
+		:FakeList(std::move(str), strlen(str)) {
 	}
 
-	string_builder(char*&& str, int n) : FakeList(std::move(str), n)
-	{
+	string_builder(char *&&str, int n)
+		:FakeList(std::move(str), n) {
 	}
 
-	string_builder& append(const char* str, int n)
-	{
+	string_builder &append(const char *str, int n) {
 		FakeList::append(str, n);
 
-		return *this;
+		return (*this);
 	}
 
-	string_builder& append(const char* str)
-	{
+	string_builder &append(const char *str) {
 		FakeList::append(str, strlen(str));
 
-		return *this;
+		return (*this);
 	}
 
-	std::string toString() const
-	{
+	std::string toString() {
 		std::string str;
 		str.resize(_size + 1);
 		str.clear();
-		node* tmp = _front;
-		while (tmp != NULL)
-		{
-			str.append(tmp->data, tmp->size);
+		node *tmp = _front;
+		while (tmp != NULL) {
+			str.append(&(*tmp)[0], tmp->size);
 			tmp = tmp->next;
 		}
 		return str;
 	}
 
-	void print(bool addLF = false)
-	{
+	void print(bool addLF = false) {
 		for (iterator it = this->begin(); it != this->end(); ++it)printf("%c", *it);
 		if (addLF)printf("\n");
 	}
 
-	string_builder& substr()
-	{
-	}
+	string_builder& substr() {}
 
 protected:
 };
 
-#endif //_FAKELIST_ABACKER_H_
+_NINI_END
+
+#endif //_FAKELIST_ABACKER_NINI_H_
