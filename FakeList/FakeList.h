@@ -15,13 +15,16 @@
 
 _NINI_BEGIN
 
-#define DEBUG						0x1111		
-#define DEBUG_RANGE_CHECK			0x0001
-#define DEBUG_UNKOWN_ERR_CHECK		0x0010
-#define DEBUG_NEW_DELET_CHECK		0x0100
-#define DEBUG_COUT_ERR_INF			0x1000
+#define DEBUG						0x11111		
+#define DEBUG_RANGE_CHECK			0x00001
+#define DEBUG_UNKOWN_ERR_CHECK		0x00010
+#define DEBUG_NEW_DELET_CHECK		0x00100
+#define DEBUG_COUT_ERR_INF			0x01000
+#define DEBUG_PRINT_NODE			0x10000
 
 typedef int size_type;
+
+template<class _Ty>class FakeList;
 
 template<class _Ty>
 class FakeList_Ptr {
@@ -50,7 +53,6 @@ class FakeList_node {
 public:
 	typedef FakeList_Ptr<_Ty> Ptr;
 	typedef FakeList_node<_Ty> node;
-
 public:
 	FakeList_node()
 		:ptr(NULL), size(0), offset(0), next(NULL) {
@@ -167,6 +169,7 @@ class FakeList_iterator {
 public:
 	typedef FakeList_node<_Ty> node;
 	typedef FakeList_iterator<_Ty> iterator;
+	friend class FakeList<_Ty>;
 
 public:
 	FakeList_iterator()
@@ -182,6 +185,10 @@ public:
 		else {
 			_cur_node = _cur_node->next;
 			_cur_pos = 0;
+
+#if(DEBUG & DEBUG_PRINT_NODE)
+			printf(",");
+#endif
 		}
 		return (*this);
 	}
@@ -231,7 +238,7 @@ public:
 		return _cur_pos != right._cur_pos || _cur_node != right._cur_node;
 	}
 
-protected:
+private:
 	int _cur_pos;
 	node *_cur_node;
 };
@@ -365,20 +372,10 @@ public:
 
 		node *tmp = _front;
 		while (tmp != NULL) {
-			if (tmp->size > pos) {
-				node *insert_node = new node(data,n);
-				node *seperat_node = new node(*tmp);
-
-				seperat_node->offset = pos;
-				seperat_node->size = tmp->size - pos;
-				tmp->size = pos;
-
-				seperat_node->next = tmp->next;
-				tmp->next = insert_node;
-				insert_node->next = seperat_node;
+			if (tmp->size >= pos) {
+				_insert(data, n, tmp, pos);
 				break;
 			}
-
 			pos -= tmp->size;
 			tmp = tmp->next;
 		}
@@ -386,10 +383,27 @@ public:
 
 		return (*this);
 	}
-	FakeList& erase(int begin, int end) {}
+	FakeList& erase(int begin, int end) {
+
+	}
 	FakeList& replace(int begin, int end, _Ty *val, int n) {}
 
-	//FakeList& insert(iterator pos) {}
+	FakeList& insert(const _Ty *elem, int n, iterator pos) {
+		
+#if(DEBUG & DEBUG_RANGE_CHECK)
+		if (pos == this->begin())return push_front();
+
+		if (pos == this->end())return append(elem, n);
+#endif
+		_Ty *data = new _Ty[n];
+		memcpy(data, elem, sizeof(_Ty)*n);
+
+		_insert(data, n, pos._cur_node, pos._cur_pos);
+
+		_size += n;
+
+		return (*this);
+	}
 	//FakeList& erase(iterator begin, iterator end) {}
 	//FakeList& replace(iterator begin, iterator end, _Ty *val, int n) {}
 
@@ -540,6 +554,24 @@ protected:
 			delete first;
 
 			first = tmp;
+		}
+	}
+	void _insert(_Ty *data,int n, node *_node, int pos) {
+		node *insert_node = new node(data, n);
+		if (_node->size == pos) {
+			insert_node->next = _node->next;
+			_node->next = insert_node;
+		}
+		else {
+			node *seperat_node = new node(*_node);
+
+			seperat_node->offset = pos;
+			seperat_node->size = _node->size - pos;
+			_node->size = pos;
+
+			seperat_node->next = _node->next;
+			_node->next = insert_node;
+			insert_node->next = seperat_node;
 		}
 	}
 

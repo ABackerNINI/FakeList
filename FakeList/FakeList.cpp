@@ -14,16 +14,22 @@ int main(){
 	sb.append("1234567890");
 	printf("%c\n", sb[5]);
 	cout << sb.toString() << endl;
-	sb.insert("aacc", 4, 3);
+	sb.insert("aacc", 4, 10);
+	sb.insert("ddeeff", 6, 4);
+	sb.insert("cccc", 4, 6);
 	cout << sb.toString() << endl;
+	sb.print(true);
+	auto it_insert = sb.begin();
+	it_insert += 4;
+	sb.insert("bbb", 3, it_insert);
+	//for (auto it = sb.begin(); it != sb.end(); ++it)printf("%c\n", *it);
+	sb.print(true);
 
 	char *s1 = new char[30];
 	strcpy(s1, "abcdefghijklmnopqrstuvwxyz");
 	string_builder sb1(std::move(s1));
 	cout << sb1.toString() << endl;
-	string_builder::iterator it;
-	it = sb.begin();
-	for (; it != sb.end(); ++it)printf("%c\n", *it);
+
 	sb1.print(true);
 
 	printf("%c %c, %c %c\n", sb.front(), sb.back(), sb1.front(), sb1.back());
