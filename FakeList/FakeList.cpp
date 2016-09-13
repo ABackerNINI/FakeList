@@ -25,6 +25,13 @@ int main(){
 	//for (auto it = sb.begin(); it != sb.end(); ++it)printf("%c\n", *it);
 	sb.print(true);
 
+	printf("%c %c\n", sb.front(), sb.back());
+
+	while(!sb.empty()) {
+		sb.pop_front();
+		sb.print(true);
+	}
+
 	char *s1 = new char[30];
 	strcpy(s1, "abcdefghijklmnopqrstuvwxyz");
 	string_builder sb1(std::move(s1));
@@ -32,7 +39,6 @@ int main(){
 
 	sb1.print(true);
 
-	printf("%c %c, %c %c\n", sb.front(), sb.back(), sb1.front(), sb1.back());
 
 	return 0;
 }
