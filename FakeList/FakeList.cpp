@@ -56,6 +56,8 @@ void test2() {
 	cout << sb1.to_string() << endl;
 
 	sb1.print(true);
+	string_builder sb2 = sb1.clone();
+	sb2.print();
 }
 
 int main(){
