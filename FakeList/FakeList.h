@@ -422,7 +422,7 @@ public:
 		return (*this);
 	}
 
-	FakeList &insert(const _Ty *elem, size_type n, iterator pos) {
+	FakeList &insert(const _Ty *elem, size_type n,  iterator pos) {
 
 #if(DEBUG & DEBUG_RANGE_CHECK)
 		if (pos == this->begin())return push_front(elem, n);
@@ -438,7 +438,7 @@ public:
 		return (*this);
 	}
 
-	FakeList &insert(_Ty *&&elem, size_type n, iterator pos) {
+	FakeList &insert(_Ty *&&elem, size_type n,  iterator pos) {
 
 #if(DEBUG & DEBUG_RANGE_CHECK)
 		if (pos == this->begin())return push_front(elem, n);
@@ -453,12 +453,18 @@ public:
 
 		return (*this);
 	}
-	
-	/*FakeList &insert(const FakeList &fakeList) {
-
-	}
 
 	FakeList &insert(FakeList &&fakeList) {
+		_back->next = fakeList._front;
+		_back = fakeList._back;
+
+		fakeList._front = NULL;
+		fakeList._back = NULL;
+
+		return (*this);
+	}
+
+	/*FakeList &insert(const FakeList &fakeList) {
 
 	}*/
 
@@ -468,6 +474,7 @@ public:
 		if (begin + n > _size)
 			throw std::out_of_range("FakeList");
 #endif
+		
 
 		return (*this);
 	}

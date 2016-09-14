@@ -1,6 +1,8 @@
+#define CRTDBG_MAP_ALLOC
 
 #include "fakelist.h"
 #include <iostream>
+#include <crtdbg.h>
 
 using namespace std;
 using namespace nini;
@@ -25,7 +27,7 @@ string_builder build() {
 	return sb;
 }
 
-void test1() {
+void test_pop_back() {
 	string_builder sb = build();
 
 	printf("%c %c\n", sb.front(), sb.back());
@@ -36,8 +38,15 @@ void test1() {
 	}
 }
 
-void test3() {
-	
+void test_pop_front() {
+	string_builder sb = build();
+
+	printf("%c %c\n", sb.front(), sb.back());
+
+	while (!sb.empty()) {
+		sb.pop_front();
+		sb.print(true);
+	}
 }
 
 void test2() {
@@ -50,7 +59,12 @@ void test2() {
 }
 
 int main(){
-	test1();
+	//_CrtSetBreakAlloc(168);
+
+	test_pop_front();
+	test2();
+
+	_CrtDumpMemoryLeaks();
 
 	return 0;
 }
