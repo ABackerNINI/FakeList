@@ -382,6 +382,7 @@ public:
 		std::swap(_size, right._size);
 		std::swap(_front, right._front);
 		std::swap(_back, right._back);
+		std::swap(_cow, right._cow);
 
 		return *this;
 	}
@@ -721,23 +722,28 @@ public:
 		}*/
 
 	//DO NOT use it if not necessary
-	FakeList clone(_Ty *(*clone_func)(const _Ty *elem, size_type n) = _clone
-		, size_type size_of_each_node = DEFAULT_SIZE_OF_EACH_NODE)const {
+	FakeList clone(size_type size_of_each_node = DEFAULT_SIZE_OF_EACH_NODE)const {
 		FakeList ret;
 
 		if (_front) {
-			size_type rest = _size;
+			int i = _size / size_of_each_node + (_size%size_of_each_node ? 1 : 0);
 			size_type len;
+			size_type rest = _size;
 
-			len = _size%size_of_each_node;
+			len = (rest >= size_of_each_node ? size_of_each_node : rest);
 			ret._front = new node(new char[len], len);
-			ret._back = _front;
-			while (rest /= size_of_each_node) {
-				len = _size%size_of_each_node;
+			ret._back = ret._front;
+			rest -= len;
+
+			while (--i) {
+				len = (rest >= size_of_each_node ? size_of_each_node : rest);
 				ret._back->next = new node(new char[len], len);
+				ret._back = ret._back->next;
+
+				rest -= len;
 			}
 
-			for (iterator src = this->begin(), des = ret.begin(); src != this->end(); ++src,++des) {
+			for (iterator src = this->begin(), des = ret.begin(); src != this->end(); ++src, ++des) {
 				*des = *src;
 			}
 
@@ -750,11 +756,12 @@ public:
 		std::swap(_size, fakeList._size);
 		std::swap(_front, fakeList._front);
 		std::swap(_back, fakeList._back);
+		std::swap(_cow, fakeList._cow);
 	}
 
-	/*size_type format(size_type size_of_each_node = DEFAULT_SIZE_OF_EACH_NODE) {
-		return 0;
-		}*/
+	void format(size_type size_of_each_node = DEFAULT_SIZE_OF_EACH_NODE) {
+		*this = this->clone();
+	}
 
 	size_type size() const {
 		return _size;
@@ -936,10 +943,10 @@ public:
 	}
 
 	string_builder clone() const {
-		//FakeList ret = FakeList::clone(_clone);
 		string_builder ret;
+
 		FakeList *p = &ret;
-		p->assign(FakeList::clone(_clone));
+		p->assign(FakeList::clone());
 
 		return ret;
 	}

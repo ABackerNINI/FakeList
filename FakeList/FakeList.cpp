@@ -57,7 +57,10 @@ void test2() {
 
 	sb1.print(true);
 	string_builder sb2 = sb1.clone();
-	sb2.print();
+	sb2.print(true);
+
+	sb1.format();
+	sb1.print(true);
 } 
 
 int main(){
