@@ -58,7 +58,7 @@ void test2() {
 	sb1.print(true);
 	string_builder sb2 = sb1.clone();
 	sb2.print();
-}
+} 
 
 int main(){
 	//_CrtSetBreakAlloc(168);

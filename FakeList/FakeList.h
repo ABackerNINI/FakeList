@@ -30,9 +30,9 @@ _NINI_BEGIN
 
 #define DEFAULT_SIZE_OF_EACH_NODE				(1000000 / sizeof(_Ty))
 
-#define __STR2__(x) #x
-#define __STR1__(x) __STR2__(x)
-#define __LOC__ __FILE__ "("__STR1__(__LINE__)") : Warning Msg: "
+//#define __STR2__(x) #x
+//#define __STR1__(x) __STR2__(x)
+//#define __LOC__ __FILE__ "("__STR1__(__LINE__)") : Warning Msg: "
 
 typedef unsigned int size_type;
 
@@ -143,7 +143,7 @@ public:
 		return (*this);
 	}
 
-	node *clone(void(*clone_func)(const _Ty *elem, size_type n)) const {
+	node *clone(_Ty *(*clone_func)(const _Ty *elem, size_type n)) const {
 		_Ty *data = clone_func(ptr->data, size);
 
 		return new node(data, size, offset, next);
@@ -180,7 +180,6 @@ protected:
 	//	_Ty *tmp = data;
 	//	for (size_type i = 0; i < n; ++i, ++tmp, ++elem)
 	//		*tmp = *elem;//mark
-
 	//	return data;
 	//}
 
@@ -535,7 +534,7 @@ public:
 		return (*this);
 	}
 
-	FakeList &append(const _Ty *&&elem, size_type n) {
+	FakeList &append(_Ty *&&elem, size_type n) {
 		if (_front == NULL) {
 			_front = new node(elem, n);
 			_back = _front;
@@ -544,6 +543,9 @@ public:
 			_back->next = new node(elem, n);
 			_back = _back->next;
 		}
+
+		elem = NULL;
+
 		_size += n;
 
 		return (*this);
@@ -557,17 +559,17 @@ public:
 		return append(std::move(&val), 1);
 	}
 
-	FakeList &append(const FakeList &fakeList) {
-		if (this == &fakeList) {
-			FakeList tmp = fakeList.clone();
-			this->_back = tmp->_front;
-		}
-		else this->_back = fakeList->_front;
+	//FakeList &append(const FakeList &fakeList) {
+	//	if (this == &fakeList) {
+	//		FakeList tmp = fakeList.clone();
+	//		this->_back = tmp->_front;
+	//	}
+	//	else this->_back = fakeList->_front;
 
-		_size += fakeList._size;
+	//	_size += fakeList._size;
 
-		return (*this);
-	}
+	//	return (*this);
+	//}
 
 	FakeList &push_front(const _Ty *elem, size_type n) {
 		_Ty *data = new _Ty[n];
@@ -719,23 +721,24 @@ public:
 		}*/
 
 	//DO NOT use it if not necessary
-	FakeList clone(_Ty *(*clone_func)(const _Ty *elem, size_type n))const {
+	FakeList clone(_Ty *(*clone_func)(const _Ty *elem, size_type n) = _clone
+		, size_type size_of_each_node = DEFAULT_SIZE_OF_EACH_NODE)const {
 		FakeList ret;
 
 		if (_front) {
-			node *tmp = _front;
+			size_type rest = _size;
+			size_type len;
 
-			//clone front node
-			ret._front = tmp->clone(clone_func);
-			ret._back = ret._front;
-			tmp = tmp->next;
+			len = _size%size_of_each_node;
+			ret._front = new node(new char[len], len);
+			ret._back = _front;
+			while (rest /= size_of_each_node) {
+				len = _size%size_of_each_node;
+				ret._back->next = new node(new char[len], len);
+			}
 
-			//clone the rest
-			while (tmp != NULL) {
-				ret._back->next = tmp->clone(clone_func);
-				ret._back = ret._back->next;
-
-				tmp = tmp->next;
+			for (iterator src = this->begin(), des = ret.begin(); src != this->end(); ++src,++des) {
+				*des = *src;
 			}
 
 			ret._size = _size;
@@ -872,11 +875,14 @@ public:
 
 	string_builder(string_builder &&str_builder)
 		:FakeList(std::move(str_builder)) {
-
 	}
 
 	string_builder(const char *str, size_type n)
 		:FakeList(str, n) {
+	}
+
+	string_builder(char *&&str, size_type n)
+		:FakeList(std::move(str), n) {
 	}
 
 	explicit string_builder(const char *str)
@@ -887,8 +893,16 @@ public:
 		:FakeList(std::move(str), strlen(str)) {
 	}
 
-	string_builder(char *&&str, size_type n)
-		:FakeList(std::move(str), n) {
+	string_builder &operator=(string_builder &&str_builder){
+		FakeList::operator=(std::move(str_builder));
+
+		return (*this);
+	}
+
+	string_builder &append(const char *str) {
+		FakeList::append(str, strlen(str));
+
+		return (*this);
 	}
 
 	string_builder &append(const char *str, size_type n) {
@@ -897,8 +911,14 @@ public:
 		return (*this);
 	}
 
-	string_builder &append(const char *str) {
-		FakeList::append(str, strlen(str));
+	string_builder &append(char *&&str) {
+		FakeList::append(std::move(str), strlen(str));
+
+		return (*this);
+	}
+
+	string_builder &append(char *&&str, size_type n) {
+		FakeList::append(std::move(str), n);
 
 		return (*this);
 	}
@@ -916,9 +936,12 @@ public:
 	}
 
 	string_builder clone() const {
-		 clone(_clone);
+		//FakeList ret = FakeList::clone(_clone);
+		string_builder ret;
+		FakeList *p = &ret;
+		p->assign(FakeList::clone(_clone));
 
-		 return (*this);
+		return ret;
 	}
 
 	/*char *c_str()const {
@@ -936,10 +959,10 @@ public:
 		return string_builder();
 	}
 
-private:
-	char *_clone(const char *str, size_type n) {
-		char *p = new char[n + 1];
-		memcpy(p, str, sizeof(char)*(n + 1));
+protected:
+	static char *_clone(const char *str, size_type n) {
+		char *p = new char[n];
+		memcpy(p, str, sizeof(char)*n);
 
 		return p;
 	}
