@@ -74,9 +74,26 @@ void test_iterator() {
 	printf("\n");
 }
 
+void test_erase() {
+	printf("test_erase\n");
+
+	string_builder sb = build();
+	sb.erase(0, 6);
+	sb.print(true);
+}
+
 void test_format_clone() {
 	printf("test_format_clone\n");
 
+	string_builder sb1 = build();
+	string_builder sb2 = sb1.clone();
+
+	sb2.print(true);
+	sb1.format();
+	sb1.print(true);
+} 
+
+void test() {
 	char *s1 = new char[30];
 	strcpy(s1, "abcdefghijklmnopqrstuvwxyz");
 	string_builder sb1(std::move(s1));
@@ -88,7 +105,7 @@ void test_format_clone() {
 
 	sb1.format();
 	sb1.print(true);
-} 
+}
 
 int main(){
 	//_CrtSetBreakAlloc(168);
@@ -97,6 +114,7 @@ int main(){
 	test_pop_back();
 	test_const_iterator();
 	test_iterator();
+	test_erase();
 	test_format_clone();
 
 	_CrtDumpMemoryLeaks();

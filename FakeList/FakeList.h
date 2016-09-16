@@ -573,8 +573,30 @@ public:
 		if (begin + n > _size)
 			throw std::out_of_range("FakeList");
 #endif
-		//node *tmp = _find_pos_node(&begin);
+		if(begin == 0 && n == _size) {
+			_tidy(_front);
+			_tidy();
+		}
+		else if (begin == 0 && n >= _front->size) {
+			n += begin;
 
+			node *tmp = _front;
+			node *_tmp = _front;
+
+			while (tmp != NULL) {
+				_tmp = tmp;
+				if (tmp->size > n) {
+					_front = tmp;
+					_front->offset += n;
+					_front->size -= n;
+					break;
+				}
+				n -= tmp->size;
+				tmp = tmp->next;
+
+				delete _tmp;
+			}
+		}
 
 		return (*this);
 	}
@@ -893,8 +915,6 @@ protected:
 		while (first != NULL) {
 			tmp = first->next;
 
-			/*if (first->offset == 0 && first->ptr->data)
-				delete[]first->ptr->data;*/
 			delete first;
 
 			first = tmp;
