@@ -307,15 +307,6 @@ public:
 	}
 
 	iterator operator++() {
-//		if (_cur_pos + 1 < _cur_node->size) ++_cur_pos;
-//		else {
-//			_cur_node = _cur_node->next;
-//			_cur_pos = 0;
-//
-//#if(DEBUG & DEBUG_PRINT_NODE)
-//			printf(",");
-//#endif
-//		}
 		++(*static_cast<base *>(this));
 
 		return (*this);
@@ -336,18 +327,6 @@ public:
 	}
 
 	iterator &operator+=(size_type n) {
-		//if (_cur_pos + n >= _cur_node->size) {
-		//	n -= (_cur_node->size - _cur_pos - 1);
-		//	_cur_pos = 0;
-		//	_cur_node = _cur_node->next;
-
-		//	while (_cur_pos + n >= _cur_node->size) {
-		//		n -= _cur_node->size;
-		//		_cur_node = _cur_node->next;
-		//	}
-		//}
-		//_cur_pos += n;
-
 		*static_cast<base *>(this) += n;
 
 		return (*this);
@@ -360,21 +339,10 @@ public:
 	_Ty &operator*() const {
 		return (*_cur_node)[_cur_pos];
 	}
-
-	//bool operator==(const iterator &right) {
-	//	return _cur_pos == right._cur_pos && _cur_node == right._cur_node;
-	//}
-
-	//bool operator!=(const iterator &right) {
-	//	return *this != right;
-	//	//return _cur_pos != right._cur_pos || _cur_node != right._cur_node;
-	//}
-
-//private:
-//	size_type _cur_pos;
-//	node *_cur_node;
 };
 
+
+//TEMPLATE CLASS FakeList
 template<class _Ty>
 class FakeList {
 protected:
@@ -988,6 +956,8 @@ protected:
 	bool _cow;
 };
 
+
+//CLASS string_builder
 class string_builder :public FakeList<char> {
 
 	typedef FakeList<char> base;
