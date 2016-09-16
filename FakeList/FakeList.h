@@ -30,6 +30,8 @@ _NINI_BEGIN
 
 #define DEFAULT_SIZE_OF_EACH_NODE				(1000000 / sizeof(_Ty))
 
+#define NOEXCEPT throw()
+
 //#define __STR2__(x) #x
 //#define __STR1__(x) __STR2__(x)
 //#define __LOC__ __FILE__ "("__STR1__(__LINE__)") : Warning Msg: "
@@ -38,16 +40,18 @@ typedef unsigned int size_type;
 
 template<class _Ty>class FakeList;
 
+
+//TEMPLATE CLASS _FakeList_Ptr
 template<class _Ty>
-class FakeList_Ptr {
+class _FakeList_Ptr {
 public:
-	FakeList_Ptr() :ref(0), data(NULL) {
+	_FakeList_Ptr() :ref(0), data(NULL) {
 	}
 
-	explicit FakeList_Ptr(_Ty *data) :ref(1), data(data) {
+	explicit _FakeList_Ptr(_Ty *data) :ref(1), data(data) {
 	}
 
-	~FakeList_Ptr() {
+	~_FakeList_Ptr() {
 #if(DEBUG & DEBUG_UNKOWN_ERR_CHECK)
 		assert(ref == 0);
 #endif
@@ -60,22 +64,24 @@ public:
 	_Ty *data;
 };
 
+
+//TEMPLATE CLASS _FakeList_node
 template<class _Ty>
-class FakeList_node {
-public:
-	typedef FakeList_Ptr<_Ty> Ptr;
-	typedef FakeList_node<_Ty> node;
+class _FakeList_node {
+
+	typedef _FakeList_Ptr<_Ty> Ptr;
+	typedef _FakeList_node<_Ty> node;
 
 public:
-	FakeList_node()
+	_FakeList_node()
 		: size(0), offset(0), next(NULL), ptr(NULL) {
 	}
 
-	FakeList_node(_Ty *data, size_type size, size_type offset = 0, node *next = NULL)
+	_FakeList_node(_Ty *data, size_type size, size_type offset = 0, node *next = NULL)
 		: size(size), offset(offset), next(next), ptr(new Ptr(data)) {
 	}
 
-	FakeList_node(const node &node) {
+	_FakeList_node(const node &node) {
 		size = node.size;
 		offset = node.offset;
 		ptr = node.ptr;
@@ -84,7 +90,7 @@ public:
 		if (ptr)++ptr->ref;
 	}
 
-	FakeList_node(node &&node) {
+	_FakeList_node(node &&node) {
 		size = node.size;
 		offset = node.offset;
 		ptr = node.ptr;
@@ -143,11 +149,10 @@ public:
 		return (*this);
 	}
 
-	node *clone(_Ty *(*clone_func)(const _Ty *elem, size_type n)) const {
-		_Ty *data = clone_func(ptr->data, size);
-
-		return new node(data, size, offset, next);
-	}
+	//node *clone(_Ty *(*clone_func)(const _Ty *elem, size_type n)) const {
+	//	_Ty *data = clone_func(ptr->data, size);
+	//	return new node(data, size, offset, next);
+	//}
 
 	_Ty &operator[](size_type pos) {
 #if(DEBUG & DEBUG_RANGE_CHECK)
@@ -157,7 +162,15 @@ public:
 		return ptr->data[pos + offset];
 	}
 
-	~FakeList_node() {
+	const _Ty &operator[](size_type pos) const {
+#if(DEBUG & DEBUG_RANGE_CHECK)
+		if (pos + 1 > size)
+			throw std::out_of_range("FakeList");
+#endif
+		return ptr->data[pos + offset];
+	}
+
+	~_FakeList_node() {
 		_dis();
 	}
 
@@ -186,29 +199,31 @@ protected:
 public:
 	size_type size;
 	size_type offset;
-	FakeList_node *next;
+	node *next;
 
 private:
-	FakeList_Ptr<_Ty> *ptr;
+	_FakeList_Ptr<_Ty> *ptr;
 };
 
+
+//TEMPLATE CLASS _FakeList_const_iterator
 template<class _Ty>
-class FakeList_iterator {
-public:
-	typedef FakeList_node<_Ty> node;
-	typedef FakeList_iterator<_Ty> iterator;
+class _FakeList_const_iterator {
+
+	typedef _FakeList_node<_Ty> node;
+	typedef _FakeList_const_iterator<_Ty> const_iterator;
 	friend class FakeList<_Ty>;
 
 public:
-	FakeList_iterator()
+	_FakeList_const_iterator()
 		:_cur_pos(0), _cur_node(NULL) {
 	}
 
-	FakeList_iterator(size_type cur_pos, node *cur_node)
+	_FakeList_const_iterator(size_type cur_pos, node *cur_node)
 		:_cur_pos(cur_pos), _cur_node(cur_node) {
 	}
 
-	iterator operator++() {
+	const_iterator operator++() {
 		if (_cur_pos + 1 < _cur_node->size) ++_cur_pos;
 		else {
 			_cur_node = _cur_node->next;
@@ -218,6 +233,91 @@ public:
 			printf(",");
 #endif
 		}
+		return (*this);
+	}
+
+	const_iterator &operator++(int) {
+		const_iterator it = *this;
+		++(*this);
+
+		return it;
+	}
+
+	const_iterator operator+(size_type n) {
+		const_iterator it = *this;
+		it += n;
+
+		return it;
+	}
+
+	const_iterator &operator+=(size_type n) {
+		if (_cur_pos + n >= _cur_node->size) {
+			n -= (_cur_node->size - _cur_pos - 1);
+			_cur_pos = 0;
+			_cur_node = _cur_node->next;
+
+			while (_cur_pos + n >= _cur_node->size) {
+				n -= _cur_node->size;
+				_cur_node = _cur_node->next;
+			}
+		}
+		_cur_pos += n;
+
+		return (*this);
+	}
+
+	const _Ty *operator->() const {
+		return &((*_cur_node)[_cur_pos]);
+	}
+
+	const _Ty &operator*() const {
+		return (*_cur_node)[_cur_pos];
+	}
+
+	bool operator==(const const_iterator &right) {
+		return _cur_pos == right._cur_pos && _cur_node == right._cur_node;
+	}
+
+	bool operator!=(const const_iterator &right) {
+		return _cur_pos != right._cur_pos || _cur_node != right._cur_node;
+	}
+
+protected:
+	size_type _cur_pos;
+	node *_cur_node;
+};
+
+
+//TEMPLATE CLASS _FakeList_iterator
+template<class _Ty>
+class _FakeList_iterator :public _FakeList_const_iterator<_Ty>{
+
+	typedef _FakeList_node<_Ty> node;
+	typedef _FakeList_iterator<_Ty> iterator;
+	typedef _FakeList_const_iterator<_Ty> base;
+	friend class FakeList<_Ty>;
+
+public:
+	_FakeList_iterator()
+		:base(){
+	}
+
+	_FakeList_iterator(size_type cur_pos, node *cur_node)
+		:base(cur_pos,cur_node) {
+	}
+
+	iterator operator++() {
+//		if (_cur_pos + 1 < _cur_node->size) ++_cur_pos;
+//		else {
+//			_cur_node = _cur_node->next;
+//			_cur_pos = 0;
+//
+//#if(DEBUG & DEBUG_PRINT_NODE)
+//			printf(",");
+//#endif
+//		}
+		++(*static_cast<base *>(this));
+
 		return (*this);
 	}
 
@@ -236,47 +336,53 @@ public:
 	}
 
 	iterator &operator+=(size_type n) {
-		if (_cur_pos + n >= _cur_node->size) {
-			n -= (_cur_node->size - _cur_pos - 1);
-			_cur_pos = 0;
-			_cur_node = _cur_node->next;
+		//if (_cur_pos + n >= _cur_node->size) {
+		//	n -= (_cur_node->size - _cur_pos - 1);
+		//	_cur_pos = 0;
+		//	_cur_node = _cur_node->next;
 
-			while (_cur_pos + n >= _cur_node->size) {
-				n -= _cur_node->size;
-				_cur_node = _cur_node->next;
-			}
-		}
-		_cur_pos += n;
+		//	while (_cur_pos + n >= _cur_node->size) {
+		//		n -= _cur_node->size;
+		//		_cur_node = _cur_node->next;
+		//	}
+		//}
+		//_cur_pos += n;
+
+		*static_cast<base *>(this) += n;
 
 		return (*this);
 	}
 
-	_Ty *operator->() {
+	_Ty *operator->() const {
 		return &((*_cur_node)[_cur_pos]);
 	}
 
-	_Ty &operator*() {
+	_Ty &operator*() const {
 		return (*_cur_node)[_cur_pos];
 	}
 
-	bool operator==(const iterator &right) {
-		return _cur_pos == right._cur_pos && _cur_node == right._cur_node;
-	}
+	//bool operator==(const iterator &right) {
+	//	return _cur_pos == right._cur_pos && _cur_node == right._cur_node;
+	//}
 
-	bool operator!=(const iterator &right) {
-		return _cur_pos != right._cur_pos || _cur_node != right._cur_node;
-	}
+	//bool operator!=(const iterator &right) {
+	//	return *this != right;
+	//	//return _cur_pos != right._cur_pos || _cur_node != right._cur_node;
+	//}
 
-private:
-	size_type _cur_pos;
-	node *_cur_node;
+//private:
+//	size_type _cur_pos;
+//	node *_cur_node;
 };
 
 template<class _Ty>
 class FakeList {
+protected:
+	typedef _FakeList_node<_Ty> node;
+
 public:
-	typedef FakeList_node<_Ty> node;
-	typedef FakeList_iterator<_Ty> iterator;
+	typedef _FakeList_iterator<_Ty> iterator;
+	typedef _FakeList_const_iterator<_Ty> const_iterator;
 
 	//private:
 	//	//CAUTION with these two functions!!!
@@ -499,7 +605,7 @@ public:
 		if (begin + n > _size)
 			throw std::out_of_range("FakeList");
 #endif
-		node *tmp = _find_pos_node(&begin);
+		//node *tmp = _find_pos_node(&begin);
 
 
 		return (*this);
@@ -669,12 +775,20 @@ public:
 	}
 	*/
 
-	iterator begin() const {
+	iterator begin() NOEXCEPT{
 		return iterator(0, _front);
 	}
 
-	iterator end() const {
+	const_iterator begin()const NOEXCEPT{
+		return const_iterator(0, _front);
+	}
+
+	iterator end() NOEXCEPT{
 		return iterator(0, NULL);
+	}
+
+	const_iterator end() const NOEXCEPT{
+		return const_iterator(0, NULL);
 	}
 
 	_Ty &front() {
@@ -744,7 +858,8 @@ public:
 				rest -= len;
 			}
 
-			for (iterator src = this->begin(), des = ret.begin(); src != this->end(); ++src, ++des) {
+			iterator  des = ret.begin();
+			for (const_iterator src = this->begin(); src != this->end(); ++src, ++des) {
 				*des = *src;
 			}
 
@@ -874,65 +989,68 @@ protected:
 };
 
 class string_builder :public FakeList<char> {
+
+	typedef FakeList<char> base;
+
 public:
 	string_builder()
-		:FakeList() {
+		:base() {
 	}
 
 	//string_builder(const string_builder &str_builder){}
 
 	string_builder(string_builder &&str_builder)
-		:FakeList(std::move(str_builder)) {
+		:base(std::move(str_builder)) {
 	}
 
 	string_builder(const char *str, size_type n)
-		:FakeList(str, n) {
+		:base(str, n) {
 	}
 
 	string_builder(char *&&str, size_type n)
-		:FakeList(std::move(str), n) {
+		:base(std::move(str), n) {
 	}
 
 	explicit string_builder(const char *str)
-		:FakeList(str, strlen(str)) {
+		:base(str, strlen(str)) {
 	}
 
 	explicit string_builder(char *&&str)
-		:FakeList(std::move(str), strlen(str)) {
+		:base(std::move(str), strlen(str)) {
 	}
 
 	string_builder &operator=(string_builder &&str_builder){
-		FakeList::operator=(std::move(str_builder));
+		base::operator=(std::move(str_builder));
 
 		return (*this);
 	}
 
 	string_builder &append(const char *str) {
-		FakeList::append(str, strlen(str));
+		base::append(str, strlen(str));
 
 		return (*this);
 	}
 
 	string_builder &append(const char *str, size_type n) {
-		FakeList::append(str, n);
+		base::append(str, n);
 
 		return (*this);
 	}
 
 	string_builder &append(char *&&str) {
-		FakeList::append(std::move(str), strlen(str));
+		base::append(std::move(str), strlen(str));
 
 		return (*this);
 	}
 
 	string_builder &append(char *&&str, size_type n) {
-		FakeList::append(std::move(str), n);
+		base::append(std::move(str), n);
 
 		return (*this);
 	}
 
 	string_builder &append(string_builder &&str_builder) {
-		FakeList::append(std::move(str_builder));
+		base::append(std::move(str_builder));
 
 		return (*this);
 	}
@@ -952,8 +1070,8 @@ public:
 	string_builder clone() const {
 		string_builder ret;
 
-		FakeList *p = &ret;
-		p->assign(FakeList::clone());
+		base *p = &ret;
+		p->assign(base::clone());
 
 		return ret;
 	}
@@ -963,7 +1081,12 @@ public:
 		}*/
 
 	void print(bool addLF = false) const {
-		for (iterator it = this->begin(); it != this->end(); ++it)
+
+#if(DEBUG & DEBUG_PRINT_NODE)
+		printf("   ");
+#endif
+
+		for (const_iterator it = this->begin(); it != this->end(); ++it)
 			printf("%c", *it);
 
 		if (addLF)printf("\n");

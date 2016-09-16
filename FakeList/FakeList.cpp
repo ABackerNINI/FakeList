@@ -28,9 +28,11 @@ string_builder build() {
 }
 
 void test_pop_back() {
+	printf("test_pop_back\n");
+
 	string_builder sb = build();
 
-	printf("%c %c\n", sb.front(), sb.back());
+	printf("front:%c back:%c\n", sb.front(), sb.back());
 
 	while (!sb.empty()) {
 		sb.pop_back();
@@ -39,9 +41,9 @@ void test_pop_back() {
 }
 
 void test_pop_front() {
-	string_builder sb = build();
+	printf("test_pop_front\n");
 
-	printf("%c %c\n", sb.front(), sb.back());
+	string_builder sb = build();
 
 	while (!sb.empty()) {
 		sb.pop_front();
@@ -49,7 +51,32 @@ void test_pop_front() {
 	}
 }
 
-void test2() {
+void test_const_iterator() {
+	printf("test_const_iterator\n");
+
+	string_builder sb = build();
+
+	for (string_builder::const_iterator it = sb.begin(); it != sb.end();++it) {
+		printf("%c", *it);
+	}
+	printf("\n");
+}
+
+void test_iterator() {
+	printf("test_iterator\n");
+
+	string_builder sb = build();
+
+	for (string_builder::iterator it = sb.begin(); it != sb.end(); ++it) {
+		*it = 'c';
+	}
+	sb.print();
+	printf("\n");
+}
+
+void test_format_clone() {
+	printf("test_format_clone\n");
+
 	char *s1 = new char[30];
 	strcpy(s1, "abcdefghijklmnopqrstuvwxyz");
 	string_builder sb1(std::move(s1));
@@ -67,7 +94,10 @@ int main(){
 	//_CrtSetBreakAlloc(168);
 
 	test_pop_front();
-	test2();
+	test_pop_back();
+	test_const_iterator();
+	test_iterator();
+	test_format_clone();
 
 	_CrtDumpMemoryLeaks();
 
