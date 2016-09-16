@@ -489,17 +489,7 @@ public:
 		return (*this);
 	}
 
-	FakeList &insert(FakeList &&fakeList) {
-		_back->next = fakeList._front;
-		_back = fakeList._back;
-
-		fakeList._front = NULL;
-		fakeList._back = NULL;
-
-		return (*this);
-	}
-
-	/*FakeList &insert(const FakeList &fakeList) {
+	/*FakeList &insert(FakeList &&fakeList,size_type pos) {
 
 	}*/
 
@@ -509,6 +499,7 @@ public:
 		if (begin + n > _size)
 			throw std::out_of_range("FakeList");
 #endif
+		node *tmp = _find_pos_node(&begin);
 
 
 		return (*this);
@@ -548,6 +539,16 @@ public:
 		elem = NULL;
 
 		_size += n;
+
+		return (*this);
+	}
+
+	FakeList &append(FakeList &&fakeList) {
+		_back->next = fakeList._front;
+		_back = fakeList._back;
+
+		fakeList._front = NULL;
+		fakeList._back = NULL;
 
 		return (*this);
 	}
@@ -926,6 +927,12 @@ public:
 
 	string_builder &append(char *&&str, size_type n) {
 		FakeList::append(std::move(str), n);
+
+		return (*this);
+	}
+
+	string_builder &append(string_builder &&str_builder) {
+		FakeList::append(std::move(str_builder));
 
 		return (*this);
 	}
