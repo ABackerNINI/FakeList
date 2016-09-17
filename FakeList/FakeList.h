@@ -4,12 +4,6 @@
 //	Created by ABacker on 9/5/2016
 //
 
-
-/*
- *
- *
- *
- */
 #ifndef _FAKELIST_ABACKER_NINI_H_
 #define _FAKELIST_ABACKER_NINI_H_
 
@@ -32,10 +26,6 @@ _NINI_BEGIN
 
 #define NOEXCEPT throw()
 
-//#define __STR2__(x) #x
-//#define __STR1__(x) __STR2__(x)
-//#define __LOC__ __FILE__ "("__STR1__(__LINE__)") : Warning Msg: "
-
 typedef unsigned int size_type;
 
 template<class _Ty>class FakeList;
@@ -45,10 +35,10 @@ template<class _Ty>class FakeList;
 template<class _Ty>
 class _FakeList_Ptr {
 public:
-	_FakeList_Ptr() :_Ref(0), _Data(NULL) {
+	_FakeList_Ptr() : _Data(NULL), _Ref(0) {
 	}
 
-	explicit _FakeList_Ptr(_Ty *data) :_Ref(1), _Data(data) {
+	explicit _FakeList_Ptr(_Ty *data) : _Data(data), _Ref(1) {
 	}
 
 	~_FakeList_Ptr() {
@@ -58,10 +48,10 @@ public:
 		if (_Data)
 			delete[] _Data;
 	}
-
+	
 public:
-	size_type _Ref;
 	_Ty *_Data;
+	size_type _Ref;
 };
 
 
@@ -206,18 +196,18 @@ class _FakeList_const_iterator {
 
 public:
 	_FakeList_const_iterator()
-		:_CurPos(0), _CurNode(NULL) {
+		:_Cur_pos(0), _Cur_node(NULL) {
 	}
 
 	_FakeList_const_iterator(size_type _CurPos, node *_CurNode)
-		:_CurPos(_CurPos), _CurNode(_CurNode) {
+		:_Cur_pos(_CurPos), _Cur_node(_CurNode) {
 	}
 
 	const_iterator operator++() {
-		if (_CurPos + 1 < _CurNode->_Size) ++_CurPos;
+		if (_Cur_pos + 1 < _Cur_node->_Size) ++_Cur_pos;
 		else {
-			_CurNode = _CurNode->_Next;
-			_CurPos = 0;
+			_Cur_node = _Cur_node->_Next;
+			_Cur_pos = 0;
 
 #if(DEBUG & DEBUG_PRINT_NODE)
 			printf(",");
@@ -243,40 +233,40 @@ public:
 	}
 
 	const_iterator &operator+=(size_type _Count) {
-		if (_CurPos + _Count >= _CurNode->_Size) {
-			_Count -= (_CurNode->_Size - _CurPos - 1);
-			_CurPos = 0;
-			_CurNode = _CurNode->_Next;
+		if (_Cur_pos + _Count >= _Cur_node->_Size) {
+			_Count -= (_Cur_node->_Size - _Cur_pos - 1);
+			_Cur_pos = 0;
+			_Cur_node = _Cur_node->_Next;
 
-			while (_CurPos + _Count >= _CurNode->_Size) {
-				_Count -= _CurNode->_Size;
-				_CurNode = _CurNode->_Next;
+			while (_Cur_pos + _Count >= _Cur_node->_Size) {
+				_Count -= _Cur_node->_Size;
+				_Cur_node = _Cur_node->_Next;
 			}
 		}
-		_CurPos += _Count;
+		_Cur_pos += _Count;
 
 		return (*this);
 	}
 
 	const _Ty *operator->() const {
-		return &((*_CurNode)[_CurPos]);
+		return &((*_Cur_node)[_Cur_pos]);
 	}
 
 	const _Ty &operator*() const {
-		return (*_CurNode)[_CurPos];
+		return (*_Cur_node)[_Cur_pos];
 	}
 
 	bool operator==(const const_iterator &_Right) {
-		return _CurPos == _Right._CurPos && _CurNode == _Right._CurNode;
+		return _Cur_pos == _Right._Cur_pos && _Cur_node == _Right._Cur_node;
 	}
 
 	bool operator!=(const const_iterator &_Right) {
-		return _CurPos != _Right._CurPos || _CurNode != _Right._CurNode;
+		return _Cur_pos != _Right._Cur_pos || _Cur_node != _Right._Cur_node;
 	}
 
 protected:
-	size_type _CurPos;
-	node *_CurNode;
+	size_type _Cur_pos;
+	node *_Cur_node;
 };
 
 
@@ -326,11 +316,11 @@ public:
 	}
 
 	_Ty *operator->() const {
-		return &((*_CurNode)[_CurPos]);
+		return &((*_Cur_node)[_Cur_pos]);
 	}
 
 	_Ty &operator*() const {
-		return (*_CurNode)[_CurPos];
+		return (*_Cur_node)[_Cur_pos];
 	}
 };
 
@@ -533,7 +523,7 @@ public:
 #endif
 		_Ty *_NewData = _Clone(_Elem, _Count);
 
-		_Insert(_NewData, _Count, _Pos._CurNode, _Pos._CurPos);
+		_Insert(_NewData, _Count, _Pos._Cur_node, _Pos._Cur_pos);
 
 		_Size += _Count;
 
@@ -547,7 +537,7 @@ public:
 
 		if (_Pos == this->end())return append(_Elem, _Count);
 #endif
-		_Insert(_Elem, _Count, _Pos._CurNode, _Pos._CurPos);
+		_Insert(_Elem, _Count, _Pos._Cur_node, _Pos._Cur_pos);
 
 		_Elem = NULL;
 
