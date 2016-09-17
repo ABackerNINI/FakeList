@@ -125,10 +125,10 @@ public:
 	}
 
 	node &swap(const node &_Node) {
-		std::swap(_Size, _Node._Size);
-		std::swap(_Offset, _Node._Offset);
-		std::swap(_Next, _Node._Next);
-		std::swap(_Ptr, _Node._Ptr);
+		std::swap(this->_Size, _Node._Size);
+		std::swap(this->_Offset, _Node._Offset);
+		std::swap(this->_Next, _Node._Next);
+		std::swap(this->_Ptr, _Node._Ptr);
 
 		return (*this);
 	}
@@ -141,7 +141,7 @@ public:
 	_Ty &operator[](size_type _Pos) {
 
 #if(DEBUG & DEBUG_RANGE_CHECK)
-		if (_Pos + 1 > _Size)
+		if (_Pos + 1 > this->_Size)
 			throw std::out_of_range("FakeList");
 #endif
 
@@ -151,7 +151,7 @@ public:
 	const _Ty &operator[](size_type _Pos) const {
 
 #if(DEBUG & DEBUG_RANGE_CHECK)
-		if (_Pos + 1 > _Size)
+		if (_Pos + 1 > this->_Size)
 			throw std::out_of_range("FakeList");
 #endif
 
@@ -845,21 +845,21 @@ public:
 		}*/
 
 	//DO NOT use it if not necessary
-	FakeList clone(size_type _Max_size_of_each_node = DEFAULT_SIZE_OF_EACH_NODE)const {
+	FakeList clone(size_type _Max_Size_Of_Each_Node = DEFAULT_SIZE_OF_EACH_NODE)const {
 		FakeList _Ret;
 
 		if (this->_Front) {
-			size_type _Num = this->_Size / _Max_size_of_each_node + (this->_Size%_Max_size_of_each_node ? 1 : 0);
+			size_type _Num = this->_Size / _Max_Size_Of_Each_Node + (this->_Size%_Max_Size_Of_Each_Node ? 1 : 0);
 			size_type _Len;
 			size_type _Rest = this->_Size;
 
-			_Len = (_Rest >= _Max_size_of_each_node ? _Max_size_of_each_node : _Rest);
+			_Len = (_Rest >= _Max_Size_Of_Each_Node ? _Max_Size_Of_Each_Node : _Rest);
 			_Ret._Front = new node(new char[_Len], _Len);
 			_Ret._Back = _Ret._Front;
 			_Rest -= _Len;
 
 			while (--_Num) {
-				_Len = (_Rest >= _Max_size_of_each_node ? _Max_size_of_each_node : _Rest);
+				_Len = (_Rest >= _Max_Size_Of_Each_Node ? _Max_Size_Of_Each_Node : _Rest);
 				_Ret._Back->_Next = new node(new char[_Len], _Len);
 				_Ret._Back = _Ret._Back->_Next;
 
@@ -883,8 +883,8 @@ public:
 		std::swap(_Cow, _FakeList._Cow);
 	}
 
-	void format(size_type _Max_size_of_each_node = DEFAULT_SIZE_OF_EACH_NODE) {
-		*this = this->clone(_Max_size_of_each_node);
+	void format(size_type _Max_Size_Of_Each_Node = DEFAULT_SIZE_OF_EACH_NODE) {
+		*this = this->clone(_Max_Size_Of_Each_Node);
 	}
 
 	size_type size() const {
@@ -958,9 +958,9 @@ protected:
 		}
 	}
 
-	node *_FindNewBack(node *_Old_back_node) {
+	node *_FindNewBack(node *_Old_Back_Node) {
 		node *_Node = _Front;
-		while (_Node != NULL && _Node->_Next != _Old_back_node) {
+		while (_Node != NULL && _Node->_Next != _Old_Back_Node) {
 			_Node = _Node->_Next;
 		}
 		return _Node;
