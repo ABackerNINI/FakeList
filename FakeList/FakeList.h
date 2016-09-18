@@ -192,7 +192,6 @@ class _FakeList_const_iterator {
 
 	typedef _FakeList_node<_Ty> node;
 	typedef _FakeList_const_iterator<_Ty> const_iterator;
-	friend class FakeList<_Ty>;
 
 public:
 	_FakeList_const_iterator()
@@ -550,6 +549,153 @@ public:
 
 	}*/
 
+	FakeList &append(const _Ty *_Elem, size_type _Count) {
+		_Ty *_NewData = new _Ty[_Count];
+		memcpy(_NewData, _Elem, sizeof(_Ty)*_Count);
+
+		if (_Front == NULL) {
+			_Front = new node(_NewData, _Count);
+			_Back = _Front;
+		}
+		else {
+			_Back->_Next = new node(_NewData, _Count);
+			_Back = _Back->_Next;
+		}
+		_Size += _Count;
+
+		return (*this);
+	}
+
+	FakeList &append(_Ty *&&_Elem, size_type _Count) {
+		if (_Front == NULL) {
+			_Front = new node(_Elem, _Count);
+			_Back = _Front;
+		}
+		else {
+			_Back->_Next = new node(_Elem, _Count);
+			_Back = _Back->_Next;
+		}
+
+		_Elem = NULL;
+
+		_Size += _Count;
+
+		return (*this);
+	}
+
+	FakeList &append(const _Ty &_Elem) {
+		return append(&_Elem, 1);
+	}
+
+	FakeList &append(_Ty &&_Elem) {
+		return append(std::move(&_Elem), 1);
+	}
+
+	FakeList &append(FakeList &&_FakeList) {
+		_Back->_Next = _FakeList._Front;
+		_Back = _FakeList._Back;
+
+		_FakeList._Front = NULL;
+		_FakeList._Back = NULL;
+
+		return (*this);
+	}
+
+	FakeList &push_front(const _Ty *_Elem, size_type _Count) {
+		_Ty *_NewData = new _Ty[_Count];
+		memcpy(_NewData, _Elem, sizeof(_Ty)*_Count);
+
+		node *_Node = new node(_NewData, _Count);
+
+		_Node->_Next = _Front;
+		_Front = _Node;
+
+		return (*this);
+	}
+
+	FakeList &push_front(_Ty *&&_Elem, size_type _Count) {
+		node *_Node = new node(_Elem, _Count);
+
+		_Elem = NULL;
+
+		_Node->_Next = _Front;
+		_Front = _Node;
+
+		return (*this);
+	}
+
+	FakeList &push_back(_Ty *_Elem, size_type _Count) {
+		return append(_Elem, _Count);
+	}
+
+	FakeList &push_back(const _Ty &_Elem) {
+		return append(_Elem);
+	}
+
+	FakeList &push_back(_Ty &&_Elem) {
+		return append(std::move(_Elem));
+	}
+
+	FakeList &pop_front() {
+#if(DEBUG & DEBUG_RANGE_CHECK)
+		if (_Size == 0)
+			throw std::out_of_range("FakeList");
+#endif
+		if (--_Front->_Size == 0) {
+			node *_Tmp = _Front;
+			_Front = _Front->_Next;
+			delete _Tmp;
+		}
+		else ++_Front->_Offset;
+
+		if (--_Size == 0)_Back = NULL;
+
+		return (*this);
+	}
+
+	FakeList &pop_back() {
+#if(DEBUG & DEBUG_RANGE_CHECK)
+		if (_Size == 0)
+			throw std::out_of_range("FakeList");
+#endif
+		if (--_Size == 0)_Front = NULL;
+
+		if (--_Back->_Size == 0) {
+			delete _Back;
+			_Back = _Find_pre(_Back);
+			if (_Back)_Back->_Next = NULL;
+		}
+
+		return (*this);
+	}
+
+	/*
+	FakeList &pop_front_n() {
+
+	return (*this);
+	}
+
+	FakeList &pop_back_n() {
+
+	return (*this);
+	}
+
+	FakeList &pop_back_node() {
+
+	return (*this);
+	}
+
+	FakeList &pop_front_node() {
+	#if(DEBUG & DEBUG_RANGE_CHECK)
+	if (_Size == 0)
+	throw std::out_of_range("FakeList");
+	#endif
+
+
+	return (*this);
+	}
+	*/
+
 	FakeList &erase(size_type _Begin, size_type _Count) {
 
 #if(DEBUG &DEBUG_RANGE_CHECK)
@@ -631,166 +777,6 @@ public:
 	//FakeList &erase(iterator begin, iterator end) {}
 	//FakeList &replace(iterator begin, iterator end, _Ty *val, int n) {}
 	//FakeList &replace(size_type begin, size_type end, _Ty *val, size_type n) {}
-
-	FakeList &append(const _Ty *_Elem, size_type _Count) {
-		_Ty *_NewData = new _Ty[_Count];
-		memcpy(_NewData, _Elem, sizeof(_Ty)*_Count);
-
-		if (_Front == NULL) {
-			_Front = new node(_NewData, _Count);
-			_Back = _Front;
-		}
-		else {
-			_Back->_Next = new node(_NewData, _Count);
-			_Back = _Back->_Next;
-		}
-		_Size += _Count;
-
-		return (*this);
-	}
-
-	FakeList &append(_Ty *&&_Elem, size_type _Count) {
-		if (_Front == NULL) {
-			_Front = new node(_Elem, _Count);
-			_Back = _Front;
-		}
-		else {
-			_Back->_Next = new node(_Elem, _Count);
-			_Back = _Back->_Next;
-		}
-
-		_Elem = NULL;
-
-		_Size += _Count;
-
-		return (*this);
-	}
-
-	FakeList &append(FakeList &&_FakeList) {
-		_Back->_Next = _FakeList._Front;
-		_Back = _FakeList._Back;
-
-		_FakeList._Front = NULL;
-		_FakeList._Back = NULL;
-
-		return (*this);
-	}
-
-	FakeList &append(const _Ty &_Elem) {
-		return append(&_Elem, 1);
-	}
-
-	FakeList &append(_Ty &&_Elem) {
-		return append(std::move(&_Elem), 1);
-	}
-
-	//FakeList &append(const FakeList &fakeList) {
-	//	if (this == &fakeList) {
-	//		FakeList tmp = fakeList.clone();
-	//		this->_Back = tmp->_Front;
-	//	}
-	//	else this->_Back = fakeList->_Front;
-
-	//	_Size += fakeList._Size;
-
-	//	return (*this);
-	//}
-
-	FakeList &push_front(const _Ty *_Elem, size_type _Count) {
-		_Ty *_NewData = new _Ty[_Count];
-		memcpy(_NewData, _Elem, sizeof(_Ty)*_Count);
-
-		node *_Node = new node(_NewData, _Count);
-
-		_Node->_Next = _Front;
-		_Front = _Node;
-
-		return (*this);
-	}
-
-	FakeList &push_front(_Ty *&&_Elem, size_type _Count) {
-		node *_Node = new node(_Elem, _Count);
-
-		_Elem = NULL;
-
-		_Node->_Next = _Front;
-		_Front = _Node;
-
-		return (*this);
-	}
-
-	FakeList &push_back(_Ty *_Elem, size_type _Count) {
-		return append(_Elem, _Count);
-	}
-
-	FakeList &push_back(const _Ty &_Elem) {
-		return append(_Elem);
-	}
-
-	FakeList &push_back(_Ty &&_Elem) {
-		return append(std::move(_Elem));
-	}
-
-	FakeList &pop_front() {
-#if(DEBUG & DEBUG_RANGE_CHECK)
-		if (_Size == 0)
-			throw std::out_of_range("FakeList");
-#endif
-		if (--_Front->_Size == 0) {
-			node *_Tmp = _Front;
-			_Front = _Front->_Next;
-			delete _Tmp;
-		}
-		else ++_Front->_Offset;
-
-		if (--_Size == 0)_Back = NULL;
-
-		return (*this);
-	}
-
-	FakeList &pop_back() {
-#if(DEBUG & DEBUG_RANGE_CHECK)
-		if (_Size == 0)
-			throw std::out_of_range("FakeList");
-#endif
-		if (--_Size == 0)_Front = NULL;
-
-		if (--_Back->_Size == 0) {
-			delete _Back;
-			_Back = _Find_pre(_Back);
-			if (_Back)_Back->_Next = NULL;
-		}
-
-		return (*this);
-	}
-
-	/*
-
-	FakeList &pop_front_n() {
-
-	return (*this);
-	}
-
-	FakeList &pop_back_n() {
-
-	return (*this);
-	}
-
-	FakeList &pop_back_node() {
-
-	return (*this);
-	}
-
-	FakeList &pop_front_node() {
-	#if(DEBUG & DEBUG_RANGE_CHECK)
-	if (_Size == 0)
-	throw std::out_of_range("FakeList");
-	#endif
-
-
-	return (*this);
-	}
-	*/
 
 	iterator begin() NOEXCEPT{
 		return iterator(0, _Front);
@@ -1016,27 +1002,25 @@ public:
 		:base() {
 	}
 
-	//string_builder(const string_builder &str_builder){}
+	string_builder(const char *_String)
+		:base(_String, strlen(_String)) {
+	}
+
+	string_builder(char *&&_String)
+		:base(std::move(_String), strlen(_String)) {
+	}
+
+	template<typename _Ty>
+	string_builder(_Ty &&_String, size_type _Count)
+		: base(std::forward<_Ty>(_String),_Count) {
+		
+	}
 
 	string_builder(string_builder &&_Str_builder)
 		:base(std::move(_Str_builder)) {
 	}
 
-	string_builder(const char *_String, size_type _Count)
-		:base(_String, _Count) {
-	}
-
-	string_builder(char *&&_String, size_type _Count)
-		:base(std::move(_String), _Count) {
-	}
-
-	explicit string_builder(const char *_String)
-		:base(_String, strlen(_String)) {
-	}
-
-	explicit string_builder(char *&&_String)
-		:base(std::move(_String), strlen(_String)) {
-	}
+	//string_builder(const string_builder &str_builder){}
 
 	string_builder &operator=(string_builder &&_Right){
 		base::operator=(std::move(_Right));
@@ -1044,26 +1028,29 @@ public:
 		return (*this);
 	}
 
-	string_builder &append(const char *_String) {
-		base::append(_String, strlen(_String));
+	template<typename _Ty>
+	string_builder &operator+=(_Ty &&_Right){
+		FakeList::append(std::forward<_Ty>(_Right), strlen(_Right));
 
 		return (*this);
 	}
 
-	string_builder &append(const char *_String, size_type _Count) {
-		base::append(_String, _Count);
+	string_builder &operator+=(string_builder &&_Right){
+		FakeList::append(std::move(_Right));
 
 		return (*this);
 	}
 
-	string_builder &append(char *&&_String) {
-		base::append(std::move(_String), strlen(_String));
+	template<typename _Ty>
+	string_builder &append(_Ty &&_String) {
+		base::append(std::forward<_Ty>(_String), strlen(_String));
 
 		return (*this);
 	}
 
-	string_builder &append(char *&&_String, size_type _Count) {
-		base::append(std::move(_String), _Count);
+	template<typename _Ty>
+	string_builder &append(_Ty &&_String,size_type _Count) {
+		base::append(std::forward<_Ty>(_String), _Count);
 
 		return (*this);
 	}
@@ -1114,9 +1101,9 @@ public:
 		if (_Add_LF)printf("\n");
 	}
 
-	string_builder substr() const {
+	/*string_builder substr() const {
 		return string_builder();
-	}
+	}*/
 
 protected:
 	static char *_Clone(const char *_String, size_type _Count) {
@@ -1126,6 +1113,14 @@ protected:
 		return _New_string;
 	}
 };
+
+inline string_builder operator+(const char *_String,string_builder &&_String_builder){
+	string_builder _Ret = _String;
+
+	_Ret += std::move(_String_builder);
+
+	return _Ret;
+}
 
 _NINI_END
 

@@ -27,6 +27,17 @@ string_builder build() {
 	return sb;
 }
 
+void test_pop_front() {
+	printf("test_pop_front\n");
+
+	string_builder sb = build();
+
+	while (!sb.empty()) {
+		sb.pop_front();
+		sb.print(true);
+	}
+}
+
 void test_pop_back() {
 	printf("test_pop_back\n");
 
@@ -36,17 +47,6 @@ void test_pop_back() {
 
 	while (!sb.empty()) {
 		sb.pop_back();
-		sb.print(true);
-	}
-}
-
-void test_pop_front() {
-	printf("test_pop_front\n");
-
-	string_builder sb = build();
-
-	while (!sb.empty()) {
-		sb.pop_front();
 		sb.print(true);
 	}
 }
@@ -95,7 +95,20 @@ void test_format_clone() {
 	sb2.print(true);
 	sb1.format();
 	sb1.print(true);
-} 
+}
+
+void test_operator() {
+	printf("test_operator\n");
+
+	string_builder sb1 = build();
+	sb1 += "test_opeator";
+	sb1.print(true);
+	string_builder sb2 = build();
+	sb1 += std::move(sb2);
+	sb1.print(true);
+
+	//string_builder sb3 = sb1 + sb2;
+}
 
 void test() {
 	char *s1 = new char[30];
@@ -120,6 +133,7 @@ int main(){
 	test_iterator();
 	test_erase();
 	test_format_clone();
+	test_operator();
 
 	_CrtDumpMemoryLeaks();
 
