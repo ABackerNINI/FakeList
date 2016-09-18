@@ -78,7 +78,11 @@ void test_erase() {
 	printf("test_erase\n");
 
 	string_builder sb = build();
-	sb.erase(5, sb.size()-5);
+	sb.erase(1, 1);
+	sb.print(true);
+	sb.erase(1, 1);
+	sb.print(true);
+	sb.erase(1, 1);
 	sb.print(true);
 }
 

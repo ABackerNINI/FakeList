@@ -31,19 +31,19 @@ typedef unsigned int size_type;
 template<class _Ty>class FakeList;
 
 
-//TEMPLATE CLASS _FakeList_Ptr
+//TEMPLATE CLASS _FakeList_node_ptr
 template<class _Ty>
-class _FakeList_Ptr {
+class _FakeList_node_ptr {
 public:
-	_FakeList_Ptr() : _Data(NULL), _Ref(0) {
+	_FakeList_node_ptr() : _Data(NULL), _Ref(0) {
 	}
 
-	explicit _FakeList_Ptr(_Ty *data) : _Data(data), _Ref(1) {
+	explicit _FakeList_node_ptr(_Ty *data) : _Data(data), _Ref(1) {
 	}
 
-	~_FakeList_Ptr() {
+	~_FakeList_node_ptr() {
 #if(DEBUG & DEBUG_UNKOWN_ERR_CHECK)
-		assert(_Ref == 0);
+		assert(_Ref == 0);//_Data should be deleted only if _Ref == 0
 #endif
 		if (_Data)
 			delete[] _Data;
@@ -59,7 +59,7 @@ public:
 template<class _Ty>
 class _FakeList_node {
 
-	typedef _FakeList_Ptr<_Ty> ptr;
+	typedef _FakeList_node_ptr<_Ty> ptr;
 	typedef _FakeList_node<_Ty> node;
 
 public:
@@ -487,7 +487,7 @@ public:
 		if (_Pos > _Size)return append(_Elem, _Count);
 #endif
 		_Ty *_NewData = _Clone(_Elem, _Count);
-		node *_Node = _FindPosNode(&_Pos);
+		node *_Node = _Find_pos_node(&_Pos);
 
 		_Insert(_NewData, _Count, _Node, _Pos);
 
@@ -503,7 +503,7 @@ public:
 
 		if (_Pos > _Size)return append(_Elem, _Count);
 #endif
-		node *_Node = _FindPosNode(&_Pos);
+		node *_Node = _Find_pos_node(&_Pos);
 
 		_Insert(_Elem, _Count, _Node, _Pos);
 
@@ -561,7 +561,7 @@ public:
 			_Tidy(_Front);
 			_Tidy();
 		}
-		else if (_Begin == 0 && _Count >= _Front->_Size) {//erase left half
+		else if (_Begin == 0 && _Count >= _Front->_Size) {//erase from beginning and cross node
 			_Count += _Begin;
 
 			node *_Node = _Front;
@@ -581,8 +581,8 @@ public:
 				delete _Tmp;
 			}
 		}
-		else if (_Begin + _Count == _Size&&_Count >= _Back->_Size) {//erase right half
-			node *_Node = _FindPosNode(&_Begin);
+		else if (_Begin + _Count == _Size&&_Count >= _Back->_Size) {//erase to end and cross node
+			node *_Node = _Find_pos_node(&_Begin);
 
 			_Tidy(_Node->_Next);
 
@@ -592,25 +592,34 @@ public:
 			_Back = _Node;
 		}
 		else {//erase middle
-			node *_Node = _FindPosNode(&_Begin);
-			node *_LHalf = _Node;
-			_Count -= _Node->_Size - _Begin;
-			_Node->_Size = _Begin;
-			_Node = _Node->_Next;
-
-			node *_Tmp;
-			while (_Node != NULL) {
-				_Tmp = _Node;
-				if (_Node->_Size > _Count) {
-					_Node->_Offset += _Count;
-					_Node->_Size -= _Count;
-					_LHalf->_Next = _Node;
-					break;
-				}
-				_Count -= _Node->_Size;
+			node *_Node = _Find_pos_node(&_Begin);
+			if (_Count < _Node->_Size - _Begin) {//all in one node
+				node *_Sep_node = new node(*_Node);
+				_Sep_node->_Size = _Node->_Size - (_Begin + _Count);
+				_Sep_node->_Offset = _Begin + _Count;
+				_Node->_Size = _Begin;
+				_Node->_Next = _Sep_node;
+			}
+			else {//cross node
+				node *_LHalf = _Node;
+				_Count -= _Node->_Size - _Begin;
+				_Node->_Size = _Begin;
 				_Node = _Node->_Next;
 
-				delete _Tmp;
+				node *_Tmp;
+				while (_Node != NULL) {
+					_Tmp = _Node;
+					if (_Node->_Size > _Count) {
+						_Node->_Offset += _Count;
+						_Node->_Size -= _Count;
+						_LHalf->_Next = _Node;
+						break;
+					}
+					_Count -= _Node->_Size;
+					_Node = _Node->_Next;
+
+					delete _Tmp;
+				}
 			}
 		}
 
@@ -748,7 +757,7 @@ public:
 
 		if (--_Back->_Size == 0) {
 			delete _Back;
-			_Back = _FindNewBack(_Back);
+			_Back = _Find_pre(_Back);
 			if (_Back)_Back->_Next = NULL;
 		}
 
@@ -845,21 +854,21 @@ public:
 		}*/
 
 	//DO NOT use it if not necessary
-	FakeList clone(size_type _Max_Size_Of_Each_Node = DEFAULT_SIZE_OF_EACH_NODE)const {
+	FakeList clone(size_type _Max_size_of_each_node = DEFAULT_SIZE_OF_EACH_NODE)const {
 		FakeList _Ret;
 
 		if (this->_Front) {
-			size_type _Num = this->_Size / _Max_Size_Of_Each_Node + (this->_Size%_Max_Size_Of_Each_Node ? 1 : 0);
+			size_type _Num = this->_Size / _Max_size_of_each_node + (this->_Size%_Max_size_of_each_node ? 1 : 0);
 			size_type _Len;
 			size_type _Rest = this->_Size;
 
-			_Len = (_Rest >= _Max_Size_Of_Each_Node ? _Max_Size_Of_Each_Node : _Rest);
+			_Len = (_Rest >= _Max_size_of_each_node ? _Max_size_of_each_node : _Rest);
 			_Ret._Front = new node(new char[_Len], _Len);
 			_Ret._Back = _Ret._Front;
 			_Rest -= _Len;
 
 			while (--_Num) {
-				_Len = (_Rest >= _Max_Size_Of_Each_Node ? _Max_Size_Of_Each_Node : _Rest);
+				_Len = (_Rest >= _Max_size_of_each_node ? _Max_size_of_each_node : _Rest);
 				_Ret._Back->_Next = new node(new char[_Len], _Len);
 				_Ret._Back = _Ret._Back->_Next;
 
@@ -883,8 +892,8 @@ public:
 		std::swap(_Cow, _FakeList._Cow);
 	}
 
-	void format(size_type _Max_Size_Of_Each_Node = DEFAULT_SIZE_OF_EACH_NODE) {
-		*this = this->clone(_Max_Size_Of_Each_Node);
+	void format(size_type _Max_size_of_each_node = DEFAULT_SIZE_OF_EACH_NODE) {
+		*this = this->clone(_Max_size_of_each_node);
 	}
 
 	size_type size() const {
@@ -958,15 +967,17 @@ protected:
 		}
 	}
 
-	node *_FindNewBack(node *_Old_Back_Node) {
-		node *_Node = _Front;
-		while (_Node != NULL && _Node->_Next != _Old_Back_Node) {
-			_Node = _Node->_Next;
+	//return NULL if _Node is the head
+	node *_Find_pre(node *_Node) {
+		node *_Tmp = _Front;
+		while (_Tmp != NULL &&_Tmp->_Next != _Node) {
+			_Tmp = _Tmp->_Next;
 		}
-		return _Node;
+		return _Tmp;
 	}
 
-	node *_FindPosNode(size_type *_Pos) {
+	//it never points to the beginning of a node
+	node *_Find_pos_node(size_type *_Pos) {
 		node *_Node = _Front;
 		while (_Node != NULL) {
 			if (_Node->_Size >= *_Pos) {
