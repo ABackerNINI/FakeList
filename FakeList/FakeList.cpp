@@ -3,6 +3,7 @@
 #include "fakelist.h"
 #include <iostream>
 #include <crtdbg.h>
+#include <list>
 
 using namespace std;
 using namespace nini;
@@ -122,6 +123,8 @@ void test() {
 
 	sb1.format();
 	sb1.print(true);
+
+	list<int>l;
 }
 
 int main(){

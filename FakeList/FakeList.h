@@ -133,11 +133,6 @@ public:
 		return (*this);
 	}
 
-	//node *clone(_Ty *(*clone_func)(const _Ty *elem, size_type n)) const {
-	//	_Ty *data = clone_func(_Ptr->data, _Size);
-	//	return new node(data, _Size, _Offset, _Next);
-	//}
-
 	_Ty &operator[](size_type _Pos) {
 
 #if(DEBUG & DEBUG_RANGE_CHECK)
@@ -324,6 +319,23 @@ public:
 };
 
 
+template<class _Ty>
+class _FakeList_ptr {
+
+	typedef _FakeList_node<_Ty> node;
+
+public:
+	_FakeList_ptr()
+		:_Size(0), _Front(NULL), _Back(NULL), _Ref(0) {
+	}
+
+public:
+	size_type _Size;
+	node *_Front;
+	node *_Back;
+	size_type _Ref;
+};
+
 //TEMPLATE CLASS FakeList
 template<class _Ty>
 class FakeList {
@@ -334,47 +346,9 @@ public:
 	typedef _FakeList_iterator<_Ty> iterator;
 	typedef _FakeList_const_iterator<_Ty> const_iterator;
 
-	//private:
-	//	//CAUTION with these two functions!!!
-	//	//when:
-	//	//  FakeList<char>a("123456");
-	//	//  FakeList<char>b = a;
-	//	//b shares the same node memory with a.
-	//	//you can use b = a.clone() if necessary
-	//	FakeList(const FakeList &right)
-	//		:_Size(right._Size), _Front(right._Front), _Back(right._Back) {
-	//
-	////#pragma message(__LOC__"CAUTION with this constructor")
-	//
-	//		//node *tmp = _Front;
-	//		//while (tmp != NULL) {
-	//		//	//++tmp->_Ptr->_Ref;
-	//
-	//		//	tmp = tmp->_Next;
-	//		//}
-	//	}
-	//
-	//	FakeList &operator=(const FakeList &right) {
-	//
-	////#pragma message(__LOC__"CAUTION with this mutator")
-	//
-	//		//_Size = right._Size;
-	//		//_Front = right._Front;
-	//		//_Back = right._Back;
-	//
-	//		//node *tmp = _Front;
-	//		//while (tmp != NULL) {
-	//		//	//++tmp->_Ptr->_Ref;
-	//
-	//		//	tmp = tmp->_Next;
-	//		//}
-	//		return (*this);
-	//	}
-	//
-
 public:
 	FakeList()
-		:_Size(0), _Front(NULL), _Back(NULL), _Cow(false) {
+		:_Size(0), _Front(NULL), _Back(NULL) {
 	}
 
 	FakeList(const _Ty *_Elem, size_type _Count)
@@ -387,60 +361,22 @@ public:
 		assign(std::move(_Elem), _Count);
 	}
 
-	FakeList(FakeList &&_Right)
+	FakeList(FakeList &&_FakeList)
 		: _Front(NULL) {
-		assign(std::move(_Right));
+		assign(std::move(_FakeList));
+	}
+
+	FakeList(const FakeList &_FakeList)
+		: _Front(NULL) {
+		assign(_FakeList);
 	}
 
 	FakeList &operator=(FakeList &&_Right) {
 		return assign(std::move(_Right));
 	}
 
-	FakeList &assign(const _Ty *_Elem, size_type _Count) {
-		_Ty *data = _Clone(_Elem, _Count);
-
-		if (_Front == NULL)
-			_Front = new node(data, _Count);
-		else {
-			_Tidy(_Front->_Next);
-			_Front->assign(data, _Count);
-		}
-
-		_Size = _Count;
-		_Back = _Front;
-		_Cow = false;
-
-		return *this;
-	}
-
-	FakeList &assign(_Ty *&&_Elem, size_type _Count) {
-		if (_Front == NULL)
-			_Front = new node(_Elem, _Count);
-		else {
-			_Tidy(_Front->_Next);
-			_Front->assign(_Elem, _Count, 0, NULL);
-		}
-
-		_Elem = NULL;
-
-		_Size = _Count;
-		_Back = _Front;
-		_Cow = false;
-
-		return *this;
-	}
-
-	/*FakeList &assign(const FakeList &right) {
-
-	}*/
-
-	FakeList &assign(FakeList &&_Right) {
-		std::swap(_Size, _Right._Size);
-		std::swap(_Front, _Right._Front);
-		std::swap(_Back, _Right._Back);
-		std::swap(_Cow, _Right._Cow);
-
-		return *this;
+	FakeList &operator=(const FakeList &_Right){
+		return assign(_Right);
 	}
 
 	_Ty &operator[](size_type _Pos) {
@@ -476,6 +412,54 @@ public:
 			_Node = _Node->_Next;
 		}
 		throw std::out_of_range("FakeList");
+	}
+
+	FakeList &assign(const _Ty *_Elem, size_type _Count) {
+		_Ty *data = _Clone(_Elem, _Count);
+
+		if (_Front == NULL)
+			_Front = new node(data, _Count);
+		else {
+			_Tidy(_Front->_Next);
+			_Front->assign(data, _Count);
+		}
+
+		_Size = _Count;
+		_Back = _Front;
+
+		return *this;
+	}
+
+	FakeList &assign(_Ty *&&_Elem, size_type _Count) {
+		if (_Front == NULL)
+			_Front = new node(_Elem, _Count);
+		else {
+			_Tidy(_Front->_Next);
+			_Front->assign(_Elem, _Count, 0, NULL);
+		}
+
+		_Elem = NULL;
+
+		_Size = _Count;
+		_Back = _Front;
+
+		return *this;
+	}
+
+	FakeList &assign(FakeList &&_FakeList) {
+		std::swap(_Size, _FakeList._Size);
+		std::swap(_Front, _FakeList._Front);
+		std::swap(_Back, _FakeList._Back);
+
+		return *this;
+	}
+
+	FakeList &assign(const FakeList &_FakeList) {
+		this->_Size = _FakeList._Size;
+		this->_Front = _FakeList._Front;
+		this->_Back = _FakeList._Back;
+
+		return (*this);
 	}
 
 	FakeList &insert(const _Ty *_Elem, size_type _Count, size_type _Pos) {
@@ -545,9 +529,13 @@ public:
 		return (*this);
 	}
 
-	/*FakeList &insert(FakeList &&fakeList,size_type pos) {
+	FakeList &insert(FakeList &&_FakeList, size_type _Pos) {
 
-	}*/
+	}
+
+	FakeList &insert(const FakeList &_FakeList, size_type _Pos) {
+
+	}
 
 	FakeList &append(const _Ty *_Elem, size_type _Count) {
 		_Ty *_NewData = new _Ty[_Count];
@@ -875,7 +863,6 @@ public:
 		std::swap(_Size, _FakeList._Size);
 		std::swap(_Front, _FakeList._Front);
 		std::swap(_Back, _FakeList._Back);
-		std::swap(_Cow, _FakeList._Cow);
 	}
 
 	void format(size_type _Max_size_of_each_node = DEFAULT_SIZE_OF_EACH_NODE) {
@@ -988,7 +975,6 @@ protected:
 	size_type _Size;
 	node *_Front;
 	node *_Back;
-	bool _Cow;
 };
 
 
@@ -1010,17 +996,21 @@ public:
 		:base(std::move(_String), strlen(_String)) {
 	}
 
-	template<typename _Ty>
-	string_builder(_Ty &&_String, size_type _Count)
-		: base(std::forward<_Ty>(_String),_Count) {
-		
+	string_builder(const char *_String, size_type _Count)
+		: base(_String, _Count) {
+	}
+
+	string_builder(char *&&_String, size_type _Count)
+		: base(std::move(_String),_Count) {
 	}
 
 	string_builder(string_builder &&_Str_builder)
 		:base(std::move(_Str_builder)) {
 	}
 
-	//string_builder(const string_builder &str_builder){}
+	string_builder(const string_builder &_Str_builder)
+		:base(_Str_builder){
+	}
 
 	string_builder &operator=(string_builder &&_Right){
 		base::operator=(std::move(_Right));
@@ -1028,9 +1018,20 @@ public:
 		return (*this);
 	}
 
-	template<typename _Ty>
-	string_builder &operator+=(_Ty &&_Right){
-		FakeList::append(std::forward<_Ty>(_Right), strlen(_Right));
+	string_builder &operator=(const string_builder &_Right) {
+		base::operator=(_Right);
+
+		return (*this);
+	}
+
+	string_builder &operator+=(const char *_Right){
+		FakeList::append(_Right, strlen(_Right));
+
+		return (*this);
+	}
+
+	string_builder &operator+=(char *&&_Right) {
+		FakeList::append(std::move(_Right), strlen(_Right));
 
 		return (*this);
 	}
@@ -1041,16 +1042,26 @@ public:
 		return (*this);
 	}
 
-	template<typename _Ty>
-	string_builder &append(_Ty &&_String) {
-		base::append(std::forward<_Ty>(_String), strlen(_String));
+	string_builder &append(const char *_String) {
+		base::append(_String, strlen(_String));
 
 		return (*this);
 	}
 
-	template<typename _Ty>
-	string_builder &append(_Ty &&_String,size_type _Count) {
-		base::append(std::forward<_Ty>(_String), _Count);
+	string_builder &append(char *&&_String) {
+		base::append(std::move(_String), strlen(_String));
+
+		return (*this);
+	}
+
+	string_builder &append(const char *_String,size_type _Count) {
+		base::append(_String, _Count);
+
+		return (*this);
+	}
+
+	string_builder &append(char *&&_String, size_type _Count) {
+		base::append(std::move(_String), _Count);
 
 		return (*this);
 	}
