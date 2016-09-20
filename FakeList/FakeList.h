@@ -329,6 +329,28 @@ public:
 		:_Size(0), _Front(NULL), _Back(NULL), _Ref(0) {
 	}
 
+	_FakeList_ptr(size_type _Size, node *_Front, node *_Back, size_type _Ref)
+		:_Size(_Size), _Front(_Front), _Back(_Back), _Ref(_Ref) {
+	}
+
+	~_FakeList_ptr() {
+#if(DEBUG & DEBUG_UNKOWN_ERR_CHECK)
+		assert(_Ref == 0);//_Data should be deleted only if _Ref == 0
+#endif
+
+		_Tidy(_Front);
+	}
+
+	void _Tidy(node *_First) {
+		node *_Tmp;
+		while (_First != NULL) {
+			_Tmp = _First->_Next;
+
+			delete _First;
+
+			_First = _Tmp;
+		}
+	}
 public:
 	size_type _Size;
 	node *_Front;
