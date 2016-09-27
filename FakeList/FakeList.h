@@ -50,19 +50,18 @@ public:
 	}
 	
 public:
-	_Ty *_Data;
-	size_type _Ref;
+	_Ty *_Data;			//the stored value
+	size_type _Ref;		//reference count
 };
 
 
 //TEMPLATE CLASS _FakeList_node
 template<class _Ty>
 class _FakeList_node {
-
+public:
 	typedef _FakeList_node_ptr<_Ty> ptr;
 	typedef _FakeList_node<_Ty> node;
 
-public:
 	_FakeList_node()
 		: _Size(0), _Offset(0), _Next(NULL), _Ptr(NULL) {
 	}
@@ -172,23 +171,22 @@ protected:
 	}
 
 public:
-	size_type _Size;
-	size_type _Offset;
-	node *_Next;
+	size_type _Size;	//size of elements in _Ptr
+	size_type _Offset;	//offset of the node when _Ptr be shared
+	node *_Next;		//next node,NULL if last
 
 private:
-	ptr *_Ptr;
+	ptr *_Ptr;			//the stored value,may shared by two or more nodes
 };
 
 
 //TEMPLATE CLASS _FakeList_const_iterator
 template<class _Ty>
 class _FakeList_const_iterator {
-
+public:
 	typedef _FakeList_node<_Ty> node;
 	typedef _FakeList_const_iterator<_Ty> const_iterator;
 
-public:
 	_FakeList_const_iterator()
 		:_Cur_pos(0), _Cur_node(NULL) {
 	}
@@ -259,21 +257,20 @@ public:
 	}
 
 protected:
-	size_type _Cur_pos;
-	node *_Cur_node;
+	size_type _Cur_pos;		//current position
+	node *_Cur_node;		//current node
 };
 
 
 //TEMPLATE CLASS _FakeList_iterator
 template<class _Ty>
 class _FakeList_iterator :public _FakeList_const_iterator<_Ty>{
-
+public:
 	typedef _FakeList_node<_Ty> node;
 	typedef _FakeList_iterator<_Ty> iterator;
 	typedef _FakeList_const_iterator<_Ty> base;
 	friend class FakeList<_Ty>;
 
-public:
 	_FakeList_iterator()
 		:base(){
 	}
@@ -319,30 +316,28 @@ public:
 };
 
 
-template<class _Ty>
-class _FakeList_ptr {
+//template<class _Ty>
+//class _FakeList_ptr {
+//public:
+//	typedef _FakeList_node<_Ty> node;
+//
+//	_FakeList_ptr()
+//		:_Size(0), _Front(NULL), _Back(NULL), _Ref(0) {
+//	}
+//
+//public:
+//	size_type _Size;	//
+//	node *_Front;		//
+//	node *_Back;		//
+//	size_type _Ref;		//
+//};
 
-	typedef _FakeList_node<_Ty> node;
-
-public:
-	_FakeList_ptr()
-		:_Size(0), _Front(NULL), _Back(NULL), _Ref(0) {
-	}
-
-public:
-	size_type _Size;
-	node *_Front;
-	node *_Back;
-	size_type _Ref;
-};
 
 //TEMPLATE CLASS FakeList
 template<class _Ty>
 class FakeList {
-protected:
-	typedef _FakeList_node<_Ty> node;
-
 public:
+	typedef _FakeList_node<_Ty> node;
 	typedef _FakeList_iterator<_Ty> iterator;
 	typedef _FakeList_const_iterator<_Ty> const_iterator;
 
@@ -827,7 +822,7 @@ public:
 		return end();
 		}*/
 
-	//DO NOT use it if not necessary
+	//DO NOT use it if unnecessary
 	FakeList clone(size_type _Max_size_of_each_node = DEFAULT_SIZE_OF_EACH_NODE)const {
 		FakeList _Ret;
 
@@ -972,18 +967,17 @@ protected:
 	}
 
 protected:
-	size_type _Size;
-	node *_Front;
-	node *_Back;
+	size_type _Size;		//totle size
+	node *_Front;			//head node
+	node *_Back;			//back node,head node if just one node
 };
 
 
 //CLASS string_builder
 class string_builder :public FakeList<char> {
-
+public:
 	typedef FakeList<char> base;
 
-public:
 	string_builder()
 		:base() {
 	}
@@ -1087,6 +1081,18 @@ public:
 		return _Str;
 	}
 
+	char *to_cstring()const {
+		char *_Str = new char[_Size + 1];
+		char *_Tmp = _Str;
+		for (auto _Iter = this->begin(); _Iter != this->end(); ++_Iter, ++_Tmp) {
+			*_Tmp = *_Iter;
+		}
+
+		*_Tmp = '\0';
+
+		return _Str;
+	}
+
 	string_builder clone() const {
 		string_builder _Ret;
 
@@ -1095,10 +1101,6 @@ public:
 
 		return _Ret;
 	}
-
-	/*char *c_str()const {
-		return NULL;
-		}*/
 
 	void print(bool _Add_LF = false) const {
 
