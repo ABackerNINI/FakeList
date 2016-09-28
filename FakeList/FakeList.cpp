@@ -127,7 +127,32 @@ void test() {
 	list<int>l;
 }
 
+struct xx {
+	long long a;
+	char b;
+	int c;
+	char d[2];
+	static int g;
+};
+
+bool huzhi(int m, int n) {
+	for (int i = 2; i <= m; ++i) {
+		if (m%i == 0 && n%i == 0)return false;
+	}
+	return true;
+}
+
+int foo() {
+	int _Res = 0;
+	for (int i = 1; i <= 81; ++i) {
+		if (huzhi(i, 81))++_Res;
+	}
+	return _Res;
+}
+
 int main(){
+	printf("%d", foo());
+
 	//_CrtSetBreakAlloc(168);
 
 	test_pop_front();
