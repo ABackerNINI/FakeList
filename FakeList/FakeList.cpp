@@ -4,6 +4,7 @@
 #include <iostream>
 #include <crtdbg.h>
 #include <list>
+#include <xstring>
 
 using namespace std;
 using namespace nini;
