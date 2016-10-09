@@ -2,6 +2,7 @@
 #include <iostream>
 #include <crtdbg.h>
 #include <list>
+#include <xstring>
 
 #define CRTDBG_MAP_ALLOC
 
@@ -120,37 +121,16 @@ void test_clone() {
 	cout << sb1.to_string() << endl;
 
 	sb1.print(true);
-	string_builder sb2 = sb1.clone();
+	string_builder sb2 = sb1.clone(3);
 	sb2.print(true);
 
-	sb1.format();
+	sb1.format(4);
 	sb1.print(true);
-	
 
 	list<int>l;
 }
 
-void test_switch_jmp() {
-	int i = 1232345;
-	switch (i) {
-	case 4304183:
-		printf("1");
-		break;
-	case 32190:
-		i += 2;
-		break;
-	case 123023:
-		break;
-	case 245120:
-		break;
-	default:
-		break;
-	}
-}
-
 int main(){
-	test_switch_jmp();
-
 	//_CrtSetBreakAlloc(168);
 
 	test_pop_front();

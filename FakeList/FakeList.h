@@ -22,13 +22,12 @@ _NINI_BEGIN
 #define DEBUG_COUT_ERR_INF						0x00001000
 #define DEBUG_PRINT_NODE						0x00010000
 
-#define DEFAULT_SIZE_OF_EACH_NODE				3//(1000000 / sizeof(_Ty))
+#define DEFAULT_SIZE_OF_EACH_NODE				(1000000 / sizeof(_Ty))
+#define DEFAULT_SIZE_OF_EACH_NODE_CHAR			 1000000
 
 #define NOEXCEPT throw()
 
 typedef unsigned int size_type;
-
-template<class _Ty>class FakeList;
 
 
 //TEMPLATE CLASS _FakeList_node_ptr
@@ -50,8 +49,8 @@ public:
 	}
 	
 public:
-	_Ty *_Data;			//the stored value
-	size_type _Ref;		//reference count
+	_Ty *_Data;
+	size_type _Ref;
 };
 
 
@@ -156,7 +155,6 @@ public:
 		_Dis();
 	}
 
-protected:
 	void _Tidy() {
 		_Size = 0;
 		_Offset = 0;
@@ -171,12 +169,12 @@ protected:
 	}
 
 public:
-	size_type _Size;	//size of elements in _Ptr
-	size_type _Offset;	//offset of the node when _Ptr be shared
-	node *_Next;		//next node,NULL if last
+	size_type _Size;
+	size_type _Offset;
+	node *_Next;
 
 private:
-	ptr *_Ptr;			//the stored value,may shared by two or more nodes
+	ptr *_Ptr;
 };
 
 
@@ -188,18 +186,18 @@ public:
 	typedef _FakeList_const_iterator<_Ty> const_iterator;
 
 	_FakeList_const_iterator()
-		:_Cur_pos(0), _Cur_node(NULL) {
+		: _Curnode(NULL), _Curpos(0) {
 	}
 
-	_FakeList_const_iterator(size_type _CurPos, node *_CurNode)
-		:_Cur_pos(_CurPos), _Cur_node(_CurNode) {
+	_FakeList_const_iterator(node *_Curnode, size_type _Curpos)
+		: _Curnode(_Curnode), _Curpos(_Curpos) {
 	}
 
 	const_iterator operator++() {
-		if (_Cur_pos + 1 < _Cur_node->_Size) ++_Cur_pos;
+		if (_Curpos + 1 < _Curnode->_Size) ++_Curpos;
 		else {
-			_Cur_node = _Cur_node->_Next;
-			_Cur_pos = 0;
+			_Curnode = _Curnode->_Next;
+			_Curpos = 0;
 
 #if(DEBUG & DEBUG_PRINT_NODE)
 			printf(",");
@@ -225,40 +223,49 @@ public:
 	}
 
 	const_iterator &operator+=(size_type _Count) {
-		if (_Cur_pos + _Count >= _Cur_node->_Size) {
-			_Count -= (_Cur_node->_Size - _Cur_pos - 1);
-			_Cur_pos = 0;
-			_Cur_node = _Cur_node->_Next;
+		if (_Curpos + _Count >= _Curnode->_Size) {
+			_Count -= (_Curnode->_Size - _Curpos - 1);
+			_Curpos = 0;
+			_Curnode = _Curnode->_Next;
 
-			while (_Cur_pos + _Count >= _Cur_node->_Size) {
-				_Count -= _Cur_node->_Size;
-				_Cur_node = _Cur_node->_Next;
+			while (_Curpos + _Count >= _Curnode->_Size) {
+				_Count -= _Curnode->_Size;
+				_Curnode = _Curnode->_Next;
 			}
 		}
-		_Cur_pos += _Count;
+		_Curpos += _Count;
 
 		return (*this);
 	}
 
 	const _Ty *operator->() const {
-		return &((*_Cur_node)[_Cur_pos]);
+		return &((*_Curnode)[_Curpos]);
 	}
 
 	const _Ty &operator*() const {
-		return (*_Cur_node)[_Cur_pos];
+		return (*_Curnode)[_Curpos];
 	}
 
 	bool operator==(const const_iterator &_Right) {
-		return _Cur_pos == _Right._Cur_pos && _Cur_node == _Right._Cur_node;
+		return _Curpos == _Right._Curpos && _Curnode == _Right._Curnode;
 	}
 
 	bool operator!=(const const_iterator &_Right) {
-		return _Cur_pos != _Right._Cur_pos || _Cur_node != _Right._Cur_node;
+		return _Curpos != _Right._Curpos || _Curnode != _Right._Curnode;
 	}
 
+	node *__Curnode() const {
+		return _Curnode;
+	}
+
+	size_type __Curpos() const {
+		return _Curpos;
+	}
+
+
 protected:
-	size_type _Cur_pos;		//current position
-	node *_Cur_node;		//current node
+	node *_Curnode;
+	size_type _Curpos;
 };
 
 
@@ -269,14 +276,13 @@ public:
 	typedef _FakeList_node<_Ty> node;
 	typedef _FakeList_iterator<_Ty> iterator;
 	typedef _FakeList_const_iterator<_Ty> base;
-	friend class FakeList<_Ty>;
 
 	_FakeList_iterator()
-		:base(){
+		:base() {
 	}
 
-	_FakeList_iterator(size_type _CurPos, node *_CurNode)
-		:base(_CurPos, _CurNode) {
+	_FakeList_iterator(node *_Curnode, size_type _Curpos)
+		:base(_Curnode, _Curpos) {
 	}
 
 	iterator operator++() {
@@ -307,45 +313,32 @@ public:
 	}
 
 	_Ty *operator->() const {
-		return &((*_Cur_node)[_Cur_pos]);
+		return &((*base::_Curnode)[base::_Curpos]);
 	}
 
 	_Ty &operator*() const {
-		return (*_Cur_node)[_Cur_pos];
+		return (*base::_Curnode)[base::_Curpos];
 	}
 };
 
 
 //template<class _Ty>
 //class _FakeList_ptr {
-//	_FakeList_ptr(size_type _Size, node *_Front, node *_Back, size_type _Ref)
-//		:_Size(_Size), _Front(_Front), _Back(_Back), _Ref(_Ref) {
+//
+//	typedef _FakeList_node<_Ty> node;
+//
+//public:
+//	_FakeList_ptr()
+//		:_Size(0), _Front(NULL), _Back(NULL), _Ref(0) {
 //	}
 //
-//	~_FakeList_ptr() {
-//#if(DEBUG & DEBUG_UNKOWN_ERR_CHECK)
-//		assert(_Ref == 0);//_Data should be deleted only if _Ref == 0
-//#endif
-//
-//		_Tidy(_Front);
-//	}
-//
-//	void _Tidy(node *_First) {
-//		node *_Tmp;
-//		while (_First != NULL) {
-//			_Tmp = _First->_Next;
-//
-//			delete _First;
-//
-//			_First = _Tmp;
-//		}
-//	}
 //public:
 //	size_type _Size;
 //	node *_Front;
 //	node *_Back;
 //	size_type _Ref;
 //};
+
 
 //TEMPLATE CLASS FakeList
 template<class _Ty>
@@ -383,7 +376,7 @@ public:
 		return assign(std::move(_Right));
 	}
 
-	FakeList &operator=(const FakeList &_Right){
+	FakeList &operator=(const FakeList &_Right) {
 		return assign(_Right);
 	}
 
@@ -478,7 +471,7 @@ public:
 		if (_Pos > _Size)return append(_Elem, _Count);
 #endif
 		_Ty *_NewData = _Clone(_Elem, _Count);
-		node *_Node = _Find_pos_node(&_Pos);
+		node *_Node = _Posnode(&_Pos);
 
 		_Insert(_NewData, _Count, _Node, _Pos);
 
@@ -494,7 +487,7 @@ public:
 
 		if (_Pos > _Size)return append(_Elem, _Count);
 #endif
-		node *_Node = _Find_pos_node(&_Pos);
+		node *_Node = _Posnode(&_Pos);
 
 		_Insert(_Elem, _Count, _Node, _Pos);
 
@@ -505,30 +498,30 @@ public:
 		return (*this);
 	}
 
-	FakeList &insert(const _Ty *_Elem, size_type _Count, iterator _Pos) {
+	FakeList &insert(const _Ty *_Elem, size_type _Count, const_iterator _Iter) {
 
 #if(DEBUG & DEBUG_RANGE_CHECK)
-		if (_Pos == this->begin())return push_front(_Elem, _Count);
+		if (_Iter == this->begin())return push_front(_Elem, _Count);
 
-		if (_Pos == this->end())return append(_Elem, _Count);
+		if (_Iter == this->end())return append(_Elem, _Count);
 #endif
 		_Ty *_NewData = _Clone(_Elem, _Count);
 
-		_Insert(_NewData, _Count, _Pos._Cur_node, _Pos._Cur_pos);
+		_Insert(_NewData, _Count, _Iter.__Curnode(), _Iter.__Curpos());
 
 		_Size += _Count;
 
 		return (*this);
 	}
 
-	FakeList &insert(_Ty *&&_Elem, size_type _Count, iterator _Pos) {
+	FakeList &insert(_Ty *&&_Elem, size_type _Count, const_iterator _Iter) {
 
 #if(DEBUG & DEBUG_RANGE_CHECK)
-		if (_Pos == this->begin())return push_front(_Elem, _Count);
+		if (_Iter == this->begin())return push_front(_Elem, _Count);
 
-		if (_Pos == this->end())return append(_Elem, _Count);
+		if (_Iter == this->end())return append(_Elem, _Count);
 #endif
-		_Insert(_Elem, _Count, _Pos._Cur_node, _Pos._Cur_pos);
+		_Insert(_Elem, _Count, _Iter.__Curnode(), _Iter.__Curpos());
 
 		_Elem = NULL;
 
@@ -537,13 +530,13 @@ public:
 		return (*this);
 	}
 
-	FakeList &insert(FakeList &&_FakeList, size_type _Pos) {
+	//FakeList &insert(FakeList &&_FakeList, size_type _Pos) {
 
-	}
+	//}
 
-	FakeList &insert(const FakeList &_FakeList, size_type _Pos) {
+	//FakeList &insert(const FakeList &_FakeList, size_type _Pos) {
 
-	}
+	//}
 
 	FakeList &append(const _Ty *_Elem, size_type _Count) {
 		_Ty *_NewData = new _Ty[_Count];
@@ -658,7 +651,7 @@ public:
 
 		if (--_Back->_Size == 0) {
 			delete _Back;
-			_Back = _Find_pre(_Back);
+			_Back = _Prevnode(_Back);
 			if (_Back)_Back->_Next = NULL;
 		}
 
@@ -724,7 +717,7 @@ public:
 			}
 		}
 		else if (_Begin + _Count == _Size&&_Count >= _Back->_Size) {//erase to end and cross node
-			node *_Node = _Find_pos_node(&_Begin);
+			node *_Node = _Posnode(&_Begin);
 
 			_Tidy(_Node->_Next);
 
@@ -734,7 +727,7 @@ public:
 			_Back = _Node;
 		}
 		else {//erase middle
-			node *_Node = _Find_pos_node(&_Begin);
+			node *_Node = _Posnode(&_Begin);
 			if (_Count < _Node->_Size - _Begin) {//all in one node
 				node *_Sep_node = new node(*_Node);
 				_Sep_node->_Size = _Node->_Size - (_Begin + _Count);
@@ -775,19 +768,19 @@ public:
 	//FakeList &replace(size_type begin, size_type end, _Ty *val, size_type n) {}
 
 	iterator begin() NOEXCEPT{
-		return iterator(0, _Front);
+		return iterator(_Front, 0);
 	}
 
 	const_iterator begin()const NOEXCEPT{
-		return const_iterator(0, _Front);
+		return const_iterator(_Front, 0);
 	}
 
 	iterator end() NOEXCEPT{
-		return iterator(0, NULL);
+		return iterator(NULL, 0);
 	}
 
 	const_iterator end() const NOEXCEPT{
-		return const_iterator(0, NULL);
+		return const_iterator(NULL, 0);
 	}
 
 	_Ty &front() {
@@ -835,7 +828,7 @@ public:
 		return end();
 		}*/
 
-	//DO NOT use it if unnecessary
+	//DO NOT use it if not necessary
 	FakeList clone(size_type _Max_size_of_each_node = DEFAULT_SIZE_OF_EACH_NODE)const {
 		FakeList _Ret;
 
@@ -911,7 +904,6 @@ public:
 		this->clear();
 	}
 
-protected:
 	void _Tidy() {
 		_Size = 0;
 		_Front = NULL;
@@ -949,7 +941,7 @@ protected:
 	}
 
 	//return NULL if _Node is the head
-	node *_Find_pre(node *_Node) {
+	node *_Prevnode(node *_Node) {
 		node *_Tmp = _Front;
 		while (_Tmp != NULL &&_Tmp->_Next != _Node) {
 			_Tmp = _Tmp->_Next;
@@ -957,8 +949,9 @@ protected:
 		return _Tmp;
 	}
 
+	//find the node contains _Pos-th element
 	//it never points to the beginning of a node
-	node *_Find_pos_node(size_type *_Pos) {
+	node *_Posnode(size_type *_Pos) {
 		node *_Node = _Front;
 		while (_Node != NULL) {
 			if (_Node->_Size >= *_Pos) {
@@ -980,9 +973,9 @@ protected:
 	}
 
 protected:
-	size_type _Size;		//totle size
-	node *_Front;			//head node
-	node *_Back;			//back node,head node if just one node
+	size_type _Size;
+	node *_Front;
+	node *_Back;
 };
 
 
@@ -1094,35 +1087,37 @@ public:
 		return _Str;
 	}
 
-	char *to_cstring()const {
-		char *_Str = new char[_Size + 1];
-		char *_Tmp = _Str;
-		for (auto _Iter = this->begin(); _Iter != this->end(); ++_Iter, ++_Tmp) {
-			*_Tmp = *_Iter;
-		}
-
-		*_Tmp = '\0';
-
-		return _Str;
-	}
-
-	string_builder clone() const {
+	string_builder clone(size_type _Max_size_of_each_node = DEFAULT_SIZE_OF_EACH_NODE_CHAR) const {
 		string_builder _Ret;
 
 		base *pRet = &_Ret;
-		pRet->assign(base::clone());
+		pRet->assign(base::clone(_Max_size_of_each_node));
 
 		return _Ret;
 	}
 
+	string_builder &format(size_type _Max_size_of_each_node = DEFAULT_SIZE_OF_EACH_NODE_CHAR) {
+		base::format(_Max_size_of_each_node);
+
+		return (*this);
+	}
+
+	/*char *c_str()const {
+		return NULL;
+		}*/
+
 	void print(bool _Add_LF = false) const {
 
 #if(DEBUG & DEBUG_PRINT_NODE)
-		printf("   ");
+		printf("<");
 #endif
 
 		for (const_iterator _Iter = this->begin(); _Iter != this->end(); ++_Iter)
 			printf("%c", *_Iter);
+
+#if(DEBUG & DEBUG_PRINT_NODE)
+		printf(">");
+#endif
 
 		if (_Add_LF)printf("\n");
 	}
