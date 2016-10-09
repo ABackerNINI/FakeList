@@ -1,9 +1,9 @@
-#define CRTDBG_MAP_ALLOC
-
 #include "FakeList.h"
 #include <iostream>
 #include <crtdbg.h>
 #include <list>
+
+#define CRTDBG_MAP_ALLOC
 
 using namespace std;
 using namespace nini;
@@ -111,7 +111,9 @@ void test_operator() {
 	//string_builder sb3 = sb1 + sb2;
 }
 
-void test() {
+void test_clone() {
+	printf("test_clone\n");
+
 	char *s1 = new char[30];
 	strcpy(s1, "abcdefghijklmnopqrstuvwxyz");
 	string_builder sb1(std::move(s1));
@@ -123,35 +125,31 @@ void test() {
 
 	sb1.format();
 	sb1.print(true);
+	
 
 	list<int>l;
 }
 
-struct xx {
-	long long a;
-	char b;
-	int c;
-	char d[2];
-	static int g;
-};
-
-bool huzhi(int m, int n) {
-	for (int i = 2; i <= m; ++i) {
-		if (m%i == 0 && n%i == 0)return false;
+void test_switch_jmp() {
+	int i = 1232345;
+	switch (i) {
+	case 4304183:
+		printf("1");
+		break;
+	case 32190:
+		i += 2;
+		break;
+	case 123023:
+		break;
+	case 245120:
+		break;
+	default:
+		break;
 	}
-	return true;
-}
-
-int foo() {
-	int _Res = 0;
-	for (int i = 1; i <= 81; ++i) {
-		if (huzhi(i, 81))++_Res;
-	}
-	return _Res;
 }
 
 int main(){
-	printf("%d", foo());
+	test_switch_jmp();
 
 	//_CrtSetBreakAlloc(168);
 
@@ -162,6 +160,7 @@ int main(){
 	test_erase();
 	test_format_clone();
 	test_operator();
+	test_clone();
 
 	_CrtDumpMemoryLeaks();
 

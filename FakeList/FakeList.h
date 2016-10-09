@@ -22,7 +22,7 @@ _NINI_BEGIN
 #define DEBUG_COUT_ERR_INF						0x00001000
 #define DEBUG_PRINT_NODE						0x00010000
 
-#define DEFAULT_SIZE_OF_EACH_NODE				(1000000 / sizeof(_Ty))
+#define DEFAULT_SIZE_OF_EACH_NODE				3//(1000000 / sizeof(_Ty))
 
 #define NOEXCEPT throw()
 
@@ -355,7 +355,6 @@ public:
 	typedef _FakeList_iterator<_Ty> iterator;
 	typedef _FakeList_const_iterator<_Ty> const_iterator;
 
-public:
 	FakeList()
 		:_Size(0), _Front(NULL), _Back(NULL) {
 	}
@@ -841,7 +840,7 @@ public:
 		FakeList _Ret;
 
 		if (this->_Front) {
-			size_type _Num = this->_Size / _Max_size_of_each_node + (this->_Size%_Max_size_of_each_node ? 1 : 0);
+			size_type _Num = this->_Size / _Max_size_of_each_node + (this->_Size%_Max_size_of_each_node ? 1 : 0);//nodes needed
 			size_type _Len;
 			size_type _Rest = this->_Size;
 
