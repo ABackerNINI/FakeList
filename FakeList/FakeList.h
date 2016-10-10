@@ -42,7 +42,7 @@ public:
 
 	~_FakeList_node_ptr() {
 #if(DEBUG & DEBUG_UNKOWN_ERR_CHECK)
-		assert(_Ref == 0);//_Data should be deleted only if _Ref == 0
+		assert(_Ref == 0);//_Data should be deleted only when _Ref == 0
 #endif
 		if (_Data)
 			delete[] _Data;
@@ -134,7 +134,7 @@ public:
 	_Ty &operator[](size_type _Pos) {
 
 #if(DEBUG & DEBUG_RANGE_CHECK)
-		if (_Pos + 1 > this->_Size)
+		if (this->_Size < _Pos + 1)
 			throw std::out_of_range("FakeList");
 #endif
 
@@ -144,7 +144,7 @@ public:
 	const _Ty &operator[](size_type _Pos) const {
 
 #if(DEBUG & DEBUG_RANGE_CHECK)
-		if (_Pos + 1 > this->_Size)
+		if (this->_Size < _Pos + 1)
 			throw std::out_of_range("FakeList");
 #endif
 
@@ -156,10 +156,10 @@ public:
 	}
 
 	void _Tidy() {
-		_Size = 0;
-		_Offset = 0;
-		_Next = NULL;
-		_Ptr = NULL;
+		this->_Size = 0;
+		this->_Offset = 0;
+		this->_Next = NULL;
+		this->_Ptr = NULL;
 	}
 
 	void _Dis() {
@@ -246,19 +246,19 @@ public:
 		return (*_Curnode)[_Curpos];
 	}
 
-	bool operator==(const const_iterator &_Right) {
+	bool operator==(const const_iterator &_Right) const {
 		return _Curpos == _Right._Curpos && _Curnode == _Right._Curnode;
 	}
 
-	bool operator!=(const const_iterator &_Right) {
+	bool operator!=(const const_iterator &_Right) const {
 		return _Curpos != _Right._Curpos || _Curnode != _Right._Curnode;
 	}
 
-	node *__Curnode() const {
+	node *_GetCurnode() const {
 		return _Curnode;
 	}
 
-	size_type __Curpos() const {
+	size_type _GetCurpos() const {
 		return _Curpos;
 	}
 
@@ -507,7 +507,7 @@ public:
 #endif
 		_Ty *_NewData = _Clone(_Elem, _Count);
 
-		_Insert(_NewData, _Count, _Iter.__Curnode(), _Iter.__Curpos());
+		_Insert(_NewData, _Count, _Iter._GetCurnode(), _Iter._GetCurpos());
 
 		_Size += _Count;
 
@@ -521,7 +521,7 @@ public:
 
 		if (_Iter == this->end())return append(_Elem, _Count);
 #endif
-		_Insert(_Elem, _Count, _Iter.__Curnode(), _Iter.__Curpos());
+		_Insert(_Elem, _Count, _Iter._GetCurnode(), _Iter._GetCurpos());
 
 		_Elem = NULL;
 
@@ -692,13 +692,13 @@ public:
 			throw std::out_of_range("FakeList");
 #endif
 
-		if (_Begin == 0 && _Count == _Size) {//erase all
+		if (_Begin == 0 && _Count == _Size) {
+			//erase all
 			_Tidy(_Front);
 			_Tidy();
 		}
-		else if (_Begin == 0 && _Count >= _Front->_Size) {//erase from beginning and cross node
-			_Count += _Begin;
-
+		else if (_Begin == 0 && _Count >= _Front->_Size) {
+			//erase from beginning and cross node
 			node *_Node = _Front;
 			node *_Tmp;
 
@@ -716,7 +716,8 @@ public:
 				delete _Tmp;
 			}
 		}
-		else if (_Begin + _Count == _Size&&_Count >= _Back->_Size) {//erase to end and cross node
+		else if (_Begin + _Count == _Size&&_Count >= _Back->_Size) {
+			//erase to end and cross node
 			node *_Node = _Posnode(&_Begin);
 
 			_Tidy(_Node->_Next);
@@ -726,16 +727,19 @@ public:
 
 			_Back = _Node;
 		}
-		else {//erase middle
+		else {
+			//erase from beginning/to end and not cross node, erase not from beginning and not to end
 			node *_Node = _Posnode(&_Begin);
-			if (_Count < _Node->_Size - _Begin) {//all in one node
+			if (_Count < _Node->_Size - _Begin) {
+				//all in one node
 				node *_Sep_node = new node(*_Node);
 				_Sep_node->_Size = _Node->_Size - (_Begin + _Count);
-				_Sep_node->_Offset = _Begin + _Count;
+				_Sep_node->_Offset += _Begin + _Count;
 				_Node->_Size = _Begin;
 				_Node->_Next = _Sep_node;
 			}
-			else {//cross node
+			else {
+				//cross node
 				node *_LHalf = _Node;
 				_Count -= _Node->_Size - _Begin;
 				_Node->_Size = _Begin;
@@ -763,9 +767,40 @@ public:
 		return (*this);
 	}
 
-	//FakeList &erase(iterator begin, iterator end) {}
-	//FakeList &replace(iterator begin, iterator end, _Ty *val, int n) {}
-	//FakeList &replace(size_type begin, size_type end, _Ty *val, size_type n) {}
+	FakeList &erase(iterator _Begin, iterator _End) {
+		//if (_Begin == this->begin() && _End == this->end()) {
+		//	//erase all
+		//	_Tidy(_Front);
+		//	_Tidy();
+		//}
+		//else if (_Begin == this->begin() && _End._GetCurnode() != this->_Front) {
+		//	//erase from beginning and cross node
+		//	
+		//}
+		if (_Begin._GetCurnode() != _End._GetCurnode()) {
+			_Tidy(_Begin._GetCurnode()->_Next, _End._GetCurnode());
+		}
+
+		_Begin._GetCurnode()->_Next = _End._GetCurnode();
+		_Begin._GetCurnode()->_Size = _Begin._GetCurnode()->_Size - _Begin._GetCurpos();
+		_End._GetCurnode()->_Offset += _End._GetCurpos();
+
+		/*node *_Node = _Begin._GetCurnode();
+		node *_Tmp;
+		while (_Node != NULL) {
+			_Tmp = _Node;
+			if (_Node == _End._GetCurnode()) {
+			}
+			_Node = _Node->_Next;
+
+			delete _Tmp;
+		}*/
+	}
+
+	FakeList &replace(iterator _Begin, iterator _End, _Ty *_Newval, int _Newval_Len) {}
+	FakeList &replace(size_type _Begin, size_type _Count, _Ty *_Newval, size_type _Newval_Len) {
+		
+	}
 
 	iterator begin() NOEXCEPT{
 		return iterator(_Front, 0);
@@ -900,19 +935,16 @@ public:
 		_Back = NULL;
 	}
 
-	~FakeList() {
-		this->clear();
-	}
-
 	void _Tidy() {
 		_Size = 0;
 		_Front = NULL;
 		_Back = NULL;
 	}
 
-	void _Tidy(node *_First) {
+	void _Tidy(node *_First, node *_End = NULL) {
+		//delete nods [_First,_End)
 		node *_Tmp;
-		while (_First != NULL) {
+		while (_First != _End) {
 			_Tmp = _First->_Next;
 
 			delete _First;
@@ -930,7 +962,7 @@ public:
 		else {
 			node *_Sep_node = new node(*_Node);
 
-			_Sep_node->_Offset = _Pos;
+			_Sep_node->_Offset += _Pos;
 			_Sep_node->_Size = _Node->_Size - _Pos;
 			_Node->_Size = _Pos;
 
@@ -972,6 +1004,9 @@ public:
 		return _NewData;
 	}
 
+	~FakeList() {
+		this->clear();
+	}
 protected:
 	size_type _Size;
 	node *_Front;
