@@ -456,9 +456,9 @@ public:
 	}
 
 	FakeList &assign(const FakeList &_FakeList) {
-		this->_Size = _FakeList._Size;
-		this->_Front = _FakeList._Front;
-		this->_Back = _FakeList._Back;
+		_Size = _FakeList._Size;
+		_Front = _FakeList._Front;
+		_Back = _FakeList._Back;
 
 		return (*this);
 	}
