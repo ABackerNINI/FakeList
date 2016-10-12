@@ -80,12 +80,20 @@ void test_erase() {
 	printf("test_erase\n");
 
 	string_builder sb = build();
-	sb.erase(1, 1);
+
+	string_builder::const_iterator _Iter1 = sb.begin(),_Iter2=sb.begin();
+
+	for (int i = 0; i < 5; ++_Iter1, ++i);
+
+	sb.erase(_Iter1, _Iter2);
 	sb.print(true);
-	sb.erase(1, 1);
-	sb.print(true);
-	sb.erase(1, 1);
-	sb.print(true);
+
+	//sb.erase(1, 1);
+	//sb.print(true);
+	//sb.erase(1, 1);
+	//sb.print(true);
+	//sb.erase(1, 1);
+	//sb.print(true);
 }
 
 void test_format_clone() {

@@ -696,6 +696,8 @@ public:
 			//erase all
 			_Tidy(_Front);
 			_Tidy();
+
+			return (*this);
 		}
 		else if (_Begin == 0 && _Count >= _Front->_Size) {
 			//erase from beginning and cross node
@@ -767,37 +769,45 @@ public:
 		return (*this);
 	}
 
-	FakeList &erase(iterator _Begin, iterator _End) {
-		//if (_Begin == this->begin() && _End == this->end()) {
-		//	//erase all
-		//	_Tidy(_Front);
-		//	_Tidy();
-		//}
-		//else if (_Begin == this->begin() && _End._GetCurnode() != this->_Front) {
-		//	//erase from beginning and cross node
-		//	
-		//}
+	//erase[_Begin,_End),this will disable iterator _Begin
+	FakeList &erase(const_iterator _Begin, const_iterator _End) {
+		if (_Begin == this->begin() && _End == this->end()) {
+			//erase all
+			_Tidy(_Front);
+			_Tidy();
+
+			return (*this);
+		}
+
+		size_type _Count = (_Begin._GetCurnode()->_Size - _Begin._GetCurpos()) + _End._GetCurpos();
+
 		if (_Begin._GetCurnode() != _End._GetCurnode()) {
-			_Tidy(_Begin._GetCurnode()->_Next, _End._GetCurnode());
+			_Count += _Tidy(_Begin._GetCurnode()->_Next, _End._GetCurnode());
 		}
 
 		_Begin._GetCurnode()->_Next = _End._GetCurnode();
 		_Begin._GetCurnode()->_Size = _Begin._GetCurnode()->_Size - _Begin._GetCurpos();
 		_End._GetCurnode()->_Offset += _End._GetCurpos();
 
-		/*node *_Node = _Begin._GetCurnode();
-		node *_Tmp;
-		while (_Node != NULL) {
-			_Tmp = _Node;
-			if (_Node == _End._GetCurnode()) {
-			}
-			_Node = _Node->_Next;
+		//affect _Front:erase from beginning and cross node
+		if (_Begin == this->begin() && _End._GetCurnode() != this->_Front) {
+			_Front = _End._GetCurnode();
+		}
 
-			delete _Tmp;
-		}*/
+		//affect _Back:erase to end and cross node or erase all _Back node
+		if (_End == this->end() && (_Begin._GetCurnode() != this->_Back || (_Begin._GetCurnode() == this->_Back && _Begin._GetCurpos() == 0))) {
+			_Back = _Begin._GetCurnode();
+		}
+
+		_Size -= _Count;
+
+		return (*this);
 	}
 
-	FakeList &replace(iterator _Begin, iterator _End, _Ty *_Newval, int _Newval_Len) {}
+	FakeList &replace(iterator _Begin, iterator _End, _Ty *_Newval, int _Newval_Len) {
+		
+	}
+
 	FakeList &replace(size_type _Begin, size_type _Count, _Ty *_Newval, size_type _Newval_Len) {
 		
 	}
@@ -941,16 +951,21 @@ public:
 		_Back = NULL;
 	}
 
-	void _Tidy(node *_First, node *_End = NULL) {
+	size_type _Tidy(node *_First, node *_End = NULL) {
 		//delete nods [_First,_End)
+		size_type _Count = 0;
+
 		node *_Tmp;
 		while (_First != _End) {
 			_Tmp = _First->_Next;
 
+			_Count += _First->_Size;
 			delete _First;
 
 			_First = _Tmp;
 		}
+
+		return _Count;
 	}
 
 	void _Insert(_Ty *_Elem, size_type _Count, node *_Node, size_type _Pos) {
