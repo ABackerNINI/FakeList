@@ -1121,7 +1121,7 @@ public:
 
 		return _Str;
 	}
-
+	
 	string_builder clone(size_type _Max_size_of_each_node = DEFAULT_SIZE_OF_EACH_NODE_CHAR) const {
 		string_builder _Ret;
 
@@ -1136,10 +1136,6 @@ public:
 
 		return (*this);
 	}
-
-	/*char *c_str()const {
-		return NULL;
-		}*/
 
 	void print(bool _Add_LF = false) const {
 
