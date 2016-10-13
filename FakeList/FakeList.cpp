@@ -83,7 +83,7 @@ void test_erase() {
 
 	string_builder::const_iterator _Iter1 = sb.begin(),_Iter2=sb.begin();
 
-	for (int i = 0; i < 5; ++_Iter1, ++i);
+	for (int i = 0; i < 5; ++_Iter2, ++i);
 
 	sb.erase(_Iter1, _Iter2);
 	sb.print(true);
