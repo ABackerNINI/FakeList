@@ -176,6 +176,10 @@ public:
 	size_type _Offset;
 	node *_Next;
 
+#if(DEBUG & DEBUG_PREV_PTR)
+	node *_Prev;
+#endif
+
 private:
 	ptr *_Ptr;
 };
@@ -842,9 +846,25 @@ public:
 		return (*this);
 	}
 
-	//FakeList &replace(size_type _Begin, size_type _Count, const _Ty *_Newval, size_type _Newval_Len) {
+	FakeList &replace(size_type _Begin, size_type _Count, const _Ty *_Newval, size_type _Newval_Len) {
+		node *_L, *_R;
 
-	//}
+		_Count += _Begin;
+
+		_L = _Posnode(&_Begin);
+		_R = _Posnode(&_Count);
+
+		if (_Begin == _L->_Size) {
+			_Begin = 0;
+			_L = _L->_Next;
+		}
+		if (_Count == _R->_Size) {
+			_Count = 0;
+			_R = _R->_Next;
+		}
+
+		return replace(_L, _R, _Newval, _Newval_Len);
+	}
 
 	iterator begin() NOEXCEPT{
 		return iterator(_Front, 0);
@@ -1055,8 +1075,7 @@ public:
 		return _Tmp;
 	}
 
-	//find the node contains _Pos-th element
-	//it never points to the beginning of a node
+	//find the node contains _Pos-th element,it never points to the beginning of a node
 	node *_Posnode(size_type *_Pos) {
 		node *_Node = _Front;
 		while (_Node != NULL) {
