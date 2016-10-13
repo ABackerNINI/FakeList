@@ -265,7 +265,6 @@ public:
 		return _Curpos;
 	}
 
-
 protected:
 	node *_Curnode;
 	size_type _Curpos;
@@ -469,8 +468,11 @@ public:
 	FakeList &insert(const _Ty *_Elem, size_type _Count, size_type _Pos) {
 
 #if(DEBUG & DEBUG_RANGE_CHECK)
-		if (_Pos > _Size)return append(_Elem, _Count);
+		if (_Size < _Pos)
+			throw std::out_of_range("FakeList");
 #endif
+		if (_Size == _Pos)return append(_Elem, _Count);
+
 		if (_Pos == 0)return push_front(_Elem, _Count);
 
 		_Ty *_NewData = _Clone(_Elem, _Count);
@@ -486,8 +488,11 @@ public:
 	FakeList &insert(_Ty *&&_Elem, size_type _Count, size_type _Pos) {
 
 #if(DEBUG & DEBUG_RANGE_CHECK)
-		if (_Pos > _Size)return append(_Elem, _Count);
+		if (_Size < _Pos)
+			throw std::out_of_range("FakeList");
 #endif
+		if (_Size == _Pos)return append(_Elem, _Count);
+
 		if (_Pos == 0)return push_front(_Elem, _Count);
 
 		node *_Node = _Posnode(&_Pos);
@@ -501,13 +506,12 @@ public:
 		return (*this);
 	}
 
+	//may disable the iterator
 	FakeList &insert(const _Ty *_Elem, size_type _Count, const_iterator _Iter) {
-
-#if(DEBUG & DEBUG_RANGE_CHECK)
 		if (_Iter == this->begin())return push_front(_Elem, _Count);
 
 		if (_Iter == this->end())return append(_Elem, _Count);
-#endif
+
 		_Ty *_NewData = _Clone(_Elem, _Count);
 
 		_Insert(_NewData, _Count, _Iter._GetCurnode(), _Iter._GetCurpos());
@@ -517,13 +521,12 @@ public:
 		return (*this);
 	}
 
+	//may disable the iterator
 	FakeList &insert(_Ty *&&_Elem, size_type _Count, const_iterator _Iter) {
-
-#if(DEBUG & DEBUG_RANGE_CHECK)
 		if (_Iter == this->begin())return push_front(_Elem, _Count);
 
 		if (_Iter == this->end())return append(_Elem, _Count);
-#endif
+
 		_Insert(_Elem, _Count, _Iter._GetCurnode(), _Iter._GetCurpos());
 
 		_Elem = NULL;
