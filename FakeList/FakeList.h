@@ -21,6 +21,9 @@ _NINI_BEGIN
 #define DEBUG_NEW_DELET_CHECK					0x00000100
 #define DEBUG_COUT_ERR_INF						0x00001000
 #define DEBUG_PRINT_NODE						0x00010000
+#define DEBUG_TOTLE_SIZE						0x00100000
+#define DEBUG_PREV_PTR							0x01000000
+
 
 #define DEFAULT_SIZE_OF_EACH_NODE				(1000000 / sizeof(_Ty))
 #define DEFAULT_SIZE_OF_EACH_NODE_CHAR			 1000000
@@ -47,7 +50,7 @@ public:
 		if (_Data)
 			delete[] _Data;
 	}
-	
+
 public:
 	_Ty *_Data;
 	size_type _Ref;
@@ -271,7 +274,7 @@ protected:
 
 //TEMPLATE CLASS _FakeList_iterator
 template<class _Ty>
-class _FakeList_iterator :public _FakeList_const_iterator<_Ty>{
+class _FakeList_iterator :public _FakeList_const_iterator<_Ty> {
 public:
 	typedef _FakeList_node<_Ty> node;
 	typedef _FakeList_iterator<_Ty> iterator;
@@ -466,10 +469,10 @@ public:
 	FakeList &insert(const _Ty *_Elem, size_type _Count, size_type _Pos) {
 
 #if(DEBUG & DEBUG_RANGE_CHECK)
-		if (_Pos == 0)return push_front(_Elem, _Count);
-
 		if (_Pos > _Size)return append(_Elem, _Count);
 #endif
+		if (_Pos == 0)return push_front(_Elem, _Count);
+
 		_Ty *_NewData = _Clone(_Elem, _Count);
 		node *_Node = _Posnode(&_Pos);
 
@@ -483,10 +486,10 @@ public:
 	FakeList &insert(_Ty *&&_Elem, size_type _Count, size_type _Pos) {
 
 #if(DEBUG & DEBUG_RANGE_CHECK)
-		if (_Pos == 0)return push_front(_Elem, _Count);
-
 		if (_Pos > _Size)return append(_Elem, _Count);
 #endif
+		if (_Pos == 0)return push_front(_Elem, _Count);
+
 		node *_Node = _Posnode(&_Pos);
 
 		_Insert(_Elem, _Count, _Node, _Pos);
@@ -550,6 +553,7 @@ public:
 			_Back->_Next = new node(_NewData, _Count);
 			_Back = _Back->_Next;
 		}
+
 		_Size += _Count;
 
 		return (*this);
@@ -647,6 +651,7 @@ public:
 		if (_Size == 0)
 			throw std::out_of_range("FakeList");
 #endif
+
 		if (--_Size == 0)_Front = NULL;
 
 		if (--_Back->_Size == 0) {
@@ -685,92 +690,114 @@ public:
 	}
 	*/
 
+	//erase elements [_Begin,_End),this will disable iterator _Begin
 	FakeList &erase(size_type _Begin, size_type _Count) {
 
 #if(DEBUG &DEBUG_RANGE_CHECK)
 		if (_Begin + _Count > _Size)
 			throw std::out_of_range("FakeList");
 #endif
+		node *_L, *_R;
 
-		if (_Begin == 0 && _Count == _Size) {
-			//erase all
-			_Tidy(_Front);
-			_Tidy();
+		_Count += _Begin;
 
-			return (*this);
+		_L = _Posnode(&_Begin);
+		_R = _Posnode(&_Count);
+
+		if(_Begin == _L->_Size) {
+			_Begin = 0;
+			_L = _L->_Next;
 		}
-		else if (_Begin == 0 && _Count >= _Front->_Size) {
-			//erase from beginning and cross node
-			node *_Node = _Front;
-			node *_Tmp;
-
-			while (_Node != NULL) {
-				_Tmp = _Node;
-				if (_Node->_Size > _Count) {
-					_Front = _Node;
-					_Front->_Offset += _Count;
-					_Front->_Size -= _Count;
-					break;
-				}
-				_Count -= _Node->_Size;
-				_Node = _Node->_Next;
-
-				delete _Tmp;
-			}
-		}
-		else if (_Begin + _Count == _Size&&_Count >= _Back->_Size) {
-			//erase to end and cross node
-			node *_Node = _Posnode(&_Begin);
-
-			_Tidy(_Node->_Next);
-
-			_Node->_Size = _Begin;
-			_Node->_Next = NULL;
-
-			_Back = _Node;
-		}
-		else {
-			//erase from beginning/to end and not cross node, erase not from beginning and not to end
-			node *_Node = _Posnode(&_Begin);
-			if (_Count < _Node->_Size - _Begin) {
-				//all in one node
-				node *_Sep_node = new node(*_Node);
-				_Sep_node->_Size = _Node->_Size - (_Begin + _Count);
-				_Sep_node->_Offset += _Begin + _Count;
-				_Node->_Size = _Begin;
-				_Node->_Next = _Sep_node;
-			}
-			else {
-				//cross node
-				node *_LHalf = _Node;
-				_Count -= _Node->_Size - _Begin;
-				_Node->_Size = _Begin;
-				_Node = _Node->_Next;
-
-				node *_Tmp;
-				while (_Node != NULL) {
-					_Tmp = _Node;
-					if (_Node->_Size > _Count) {
-						_Node->_Offset += _Count;
-						_Node->_Size -= _Count;
-						_LHalf->_Next = _Node;
-						break;
-					}
-					_Count -= _Node->_Size;
-					_Node = _Node->_Next;
-
-					delete _Tmp;
-				}
-			}
+		if (_Count == _R->_Size) {
+			_Count = 0;
+			_R = _R->_Next;
 		}
 
-		_Size -= _Count;
+		return erase(const_iterator(_L, _Begin), const_iterator(_R, _Count));
 
-		return (*this);
+		//if (_Count == 0)return (*this);
+		//
+		//if (_Begin == 0 && _Count == _Size) {
+		//	//erase all
+		//	_Tidy(_Front);
+		//	_Tidy();
+		//
+		//	return (*this);
+		//}
+		//else if (_Begin == 0 && _Count >= _Front->_Size) {
+		//	//erase from beginning and cross node
+		//	node *_Node = _Front;
+		//	node *_Tmp;
+		//
+		//	while (_Node != NULL) {
+		//		_Tmp = _Node;
+		//		if (_Node->_Size > _Count) {
+		//			_Front = _Node;
+		//			_Front->_Offset += _Count;
+		//			_Front->_Size -= _Count;
+		//			break;
+		//		}
+		//		_Count -= _Node->_Size;
+		//		_Node = _Node->_Next;
+		//
+		//		delete _Tmp;
+		//	}
+		//}
+		//else if (_Begin + _Count == _Size&&_Count >= _Back->_Size) {
+		//	//erase to end and cross node
+		//	node *_Node = _Posnode(&_Begin);
+		//
+		//	_Tidy(_Node->_Next);
+		//
+		//	_Node->_Size = _Begin;
+		//	_Node->_Next = NULL;
+		//
+		//	_Back = _Node;
+		//}
+		//else {
+		//	//erase from beginning/to end and not cross node, erase not from beginning and not to end
+		//	node *_Node = _Posnode(&_Begin);
+		//	if (_Count < _Node->_Size - _Begin) {
+		//		//all in one node
+		//		node *_Sep_node = new node(*_Node);
+		//		_Sep_node->_Size = _Node->_Size - (_Begin + _Count);
+		//		_Sep_node->_Offset += _Begin + _Count;
+		//		_Node->_Size = _Begin;
+		//		_Node->_Next = _Sep_node;
+		//	}
+		//	else {
+		//		//cross node
+		//		node *_LHalf = _Node;
+		//		_Count -= _Node->_Size - _Begin;
+		//		_Node->_Size = _Begin;
+		//		_Node = _Node->_Next;
+		//
+		//		node *_Tmp;
+		//		while (_Node != NULL) {
+		//			_Tmp = _Node;
+		//			if (_Node->_Size > _Count) {
+		//				_Node->_Offset += _Count;
+		//				_Node->_Size -= _Count;
+		//				_LHalf->_Next = _Node;
+		//				break;
+		//			}
+		//			_Count -= _Node->_Size;
+		//			_Node = _Node->_Next;
+		//
+		//			delete _Tmp;
+		//		}
+		//	}
+		//}
+		//
+		//_Size -= _Count;
+		//
+		//return (*this);
 	}
 
-	//erase[_Begin,_End),this will disable iterator _Begin
+	//erase elements [_Begin,_End),this will disable iterator _Begin
 	FakeList &erase(const_iterator _Begin, const_iterator _End) {
+		if (_Begin == _End) return (*this);
+
 		if (_Begin == this->begin() && _End == this->end()) {
 			//erase all
 			_Tidy(_Front);
@@ -779,24 +806,97 @@ public:
 			return (*this);
 		}
 
-		size_type _Count = (_Begin._GetCurnode()->_Size - _Begin._GetCurpos()) + _End._GetCurpos();
 
-		if (_Begin._GetCurnode() != _End._GetCurnode()) {
-			_Count += _Tidy(_Begin._GetCurnode()->_Next, _End._GetCurnode());
+		size_type _Count = 0;
+
+		if (_Begin._GetCurnode() == _End._GetCurnode()) {
+			//in one node but not all node
+			_Count += _End._GetCurpos() - _Begin._GetCurpos();
+
+			if (_Begin._GetCurpos() == 0) {
+				//from beginning
+				_Begin._GetCurnode()->_Offset += _End._GetCurpos();
+				_Begin._GetCurnode()->_Size -= _End._GetCurpos();
+			}
+			else {
+				//not from beginning,separate the node
+				node *_Sep_node = new node(*_Begin._GetCurnode());
+				_Sep_node->_Offset += _End._GetCurpos();
+				_Sep_node->_Size -= _End._GetCurpos();
+				_Begin._GetCurnode()->_Size = _Begin._GetCurpos();
+				_Begin._GetCurnode()->_Next = _Sep_node;
+			}
 		}
+		else {
+			//in two or more nodes
+			node* _PrevL, *_L, *_R;//nodes [_L,_R) will be deleted
 
-		_Begin._GetCurnode()->_Next = _End._GetCurnode();
-		_Begin._GetCurnode()->_Size = _Begin._GetCurnode()->_Size - _Begin._GetCurpos();
-		_End._GetCurnode()->_Offset += _End._GetCurpos();
+			if (_Begin._GetCurpos() == 0) {
+				//erase from beginning of the node,delete it
+				_PrevL = _Prevnode(_Begin._GetCurnode());
+				_L = _Begin._GetCurnode();
+			}
+			else {
+				_PrevL = _Begin._GetCurnode();
+				_L = _Begin._GetCurnode()->_Next;
 
-		//affect _Front:erase from beginning and cross node
-		if (_Begin == this->begin() && _End._GetCurnode() != this->_Front) {
-			_Front = _End._GetCurnode();
-		}
+				_Count += _PrevL->_Size - _Begin._GetCurpos();
+				_PrevL->_Size = _Begin._GetCurpos();
+			}
 
-		//affect _Back:erase to end and cross node or erase all _Back node
-		if (_End == this->end() && (_Begin._GetCurnode() != this->_Back || (_Begin._GetCurnode() == this->_Back && _Begin._GetCurpos() == 0))) {
-			_Back = _Begin._GetCurnode();
+			_Count += _End._GetCurpos();
+			_R = _End._GetCurnode();
+			if (_R) {
+				_R->_Offset += _End._GetCurpos();
+				_R->_Size -= _End._GetCurpos();
+			}
+
+			_Count += _Tidy_n(_L, _R);
+
+			if (!_PrevL) {
+				//_Front node will be deleted
+				_Front = _R;
+			}
+			else {
+				_PrevL->_Next = _R;
+			}
+
+			if (_R == NULL) {
+				//_Back node will be deleted
+				_Back = _PrevL;
+			}
+
+			////affect _Front:erase from beginning and cross node
+			//if (_Begin == this->begin() && _End._GetCurnode() != this->_Front) {
+			//	_Front = _End._GetCurnode();
+			//}
+
+			////affect _Back:erase to end and cross node or erase all _Back node
+			//if (_End == this->end() && (_Begin._GetCurnode() != this->_Back || (_Begin._GetCurnode() == this->_Back && _Begin._GetCurpos() == 0))) {
+			//	_Back = _Begin._GetCurnode();
+			//}
+			//if (_Begin._GetCurpos() == 0) {
+			//	node *_Node = _Prevnode(_Begin._GetCurnode());
+			//	if (_Node) {
+			//		_Node->_Next = _End._GetCurnode();
+			//	}
+			//	else {
+			//		_Front = _End._GetCurnode();
+			//	}
+			//	delete _Begin._GetCurnode();
+			//}
+
+			//if (_End._GetCurpos() + 1 == _End._GetCurnode()->_Size) {
+
+			//}
+
+			//_Count += (_Begin._GetCurnode()->_Size - _Begin._GetCurpos()) + _End._GetCurpos();
+			//_Count += _Tidy(_Begin._GetCurnode()->_Next, _End._GetCurnode());
+
+			//_Begin._GetCurnode()->_Next = _End._GetCurnode();
+			//_Begin._GetCurnode()->_Size = _Begin._GetCurpos();
+			//_End._GetCurnode()->_Offset += _End._GetCurpos();
+			//_End._GetCurnode()->_Size -= _End._GetCurpos();
 		}
 
 		_Size -= _Count;
@@ -804,13 +904,13 @@ public:
 		return (*this);
 	}
 
-	FakeList &replace(iterator _Begin, iterator _End, _Ty *_Newval, int _Newval_Len) {
-		
-	}
+	//FakeList &replace(iterator _Begin, iterator _End, _Ty *_Newval, int _Newval_Len) {
 
-	FakeList &replace(size_type _Begin, size_type _Count, _Ty *_Newval, size_type _Newval_Len) {
-		
-	}
+	//}
+
+	//FakeList &replace(size_type _Begin, size_type _Count, _Ty *_Newval, size_type _Newval_Len) {
+
+	//}
 
 	iterator begin() NOEXCEPT{
 		return iterator(_Front, 0);
@@ -951,8 +1051,20 @@ public:
 		_Back = NULL;
 	}
 
-	size_type _Tidy(node *_First, node *_End = NULL) {
+	void _Tidy(node *_First, node *_End = NULL) {
 		//delete nods [_First,_End)
+		node *_Tmp;
+		while (_First != _End) {
+			_Tmp = _First->_Next;
+
+			delete _First;
+
+			_First = _Tmp;
+		}
+	}
+
+	size_type _Tidy_n(node *_First, node *_End = NULL) {
+		//delete nods [_First,_End) and return number of elements deleted
 		size_type _Count = 0;
 
 		node *_Tmp;
@@ -1051,7 +1163,7 @@ public:
 	}
 
 	string_builder(char *&&_String, size_type _Count)
-		: base(std::move(_String),_Count) {
+		: base(std::move(_String), _Count) {
 	}
 
 	string_builder(string_builder &&_Str_builder)
@@ -1059,10 +1171,10 @@ public:
 	}
 
 	string_builder(const string_builder &_Str_builder)
-		:base(_Str_builder){
+		:base(_Str_builder) {
 	}
 
-	string_builder &operator=(string_builder &&_Right){
+	string_builder &operator=(string_builder &&_Right) {
 		base::operator=(std::move(_Right));
 
 		return (*this);
@@ -1074,7 +1186,7 @@ public:
 		return (*this);
 	}
 
-	string_builder &operator+=(const char *_Right){
+	string_builder &operator+=(const char *_Right) {
 		FakeList::append(_Right, strlen(_Right));
 
 		return (*this);
@@ -1086,7 +1198,7 @@ public:
 		return (*this);
 	}
 
-	string_builder &operator+=(string_builder &&_Right){
+	string_builder &operator+=(string_builder &&_Right) {
 		FakeList::append(std::move(_Right));
 
 		return (*this);
@@ -1104,7 +1216,7 @@ public:
 		return (*this);
 	}
 
-	string_builder &append(const char *_String,size_type _Count) {
+	string_builder &append(const char *_String, size_type _Count) {
 		base::append(_String, _Count);
 
 		return (*this);
@@ -1166,7 +1278,7 @@ public:
 			printf("%c", *_Iter);
 
 #if(DEBUG & DEBUG_PRINT_NODE)
-		printf(">");
+		printf("||%d>", _Size);
 #endif
 
 		if (_Add_LF)printf("\n");
@@ -1174,7 +1286,7 @@ public:
 
 	/*string_builder substr() const {
 		return string_builder();
-	}*/
+		}*/
 
 protected:
 	static char *_Clone(const char *_String, size_type _Count) {
@@ -1185,7 +1297,7 @@ protected:
 	}
 };
 
-inline string_builder operator+(const char *_String,string_builder &&_String_builder){
+inline string_builder operator+(const char *_String, string_builder &&_String_builder) {
 	string_builder _Ret = _String;
 
 	_Ret += std::move(_String_builder);

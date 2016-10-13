@@ -1,3 +1,7 @@
+//
+//	Created by ABacker on 9/5/2016
+//
+
 #include "FakeList.h"
 #include <iostream>
 #include <crtdbg.h>
@@ -27,73 +31,6 @@ string_builder build() {
 	sb.print(true);
 
 	return sb;
-}
-
-void test_pop_front() {
-	printf("test_pop_front\n");
-
-	string_builder sb = build();
-
-	while (!sb.empty()) {
-		sb.pop_front();
-		sb.print(true);
-	}
-}
-
-void test_pop_back() {
-	printf("test_pop_back\n");
-
-	string_builder sb = build();
-
-	printf("front:%c back:%c\n", sb.front(), sb.back());
-
-	while (!sb.empty()) {
-		sb.pop_back();
-		sb.print(true);
-	}
-}
-
-void test_const_iterator() {
-	printf("test_const_iterator\n");
-
-	string_builder sb = build();
-
-	for (string_builder::const_iterator it = sb.begin(); it != sb.end();++it) {
-		printf("%c", *it);
-	}
-	printf("\n");
-}
-
-void test_iterator() {
-	printf("test_iterator\n");
-
-	string_builder sb = build();
-
-	for (string_builder::iterator it = sb.begin(); it != sb.end(); ++it) {
-		*it = 'c';
-	}
-	sb.print();
-	printf("\n");
-}
-
-void test_erase() {
-	printf("test_erase\n");
-
-	string_builder sb = build();
-
-	string_builder::const_iterator _Iter1 = sb.begin(),_Iter2=sb.begin();
-
-	for (int i = 0; i < 5; ++_Iter1, ++i);
-
-	sb.erase(_Iter1, _Iter2);
-	sb.print(true);
-
-	//sb.erase(1, 1);
-	//sb.print(true);
-	//sb.erase(1, 1);
-	//sb.print(true);
-	//sb.erase(1, 1);
-	//sb.print(true);
 }
 
 void test_format_clone() {
@@ -141,11 +78,6 @@ void test_clone() {
 int main(){
 	//_CrtSetBreakAlloc(168);
 
-	test_pop_front();
-	test_pop_back();
-	test_const_iterator();
-	test_iterator();
-	test_erase();
 	test_format_clone();
 	test_operator();
 	test_clone();
