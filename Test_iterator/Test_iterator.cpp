@@ -16,7 +16,7 @@ using namespace nini;
 string_builder build() {
 	string_builder sb;
 	char *s = new char[15];
-	strcpy_s(s, 15, "1234567890");
+	strcpy_s(s, sizeof(char)* 15, "1234567890");
 	sb.assign(std::move(s), strlen(s));
 
 	sb.append("1234567890");

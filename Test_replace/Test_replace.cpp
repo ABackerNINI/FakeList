@@ -1,10 +1,11 @@
 //
-//	Created by ABacker on 10/13/2016
+//	Created by ABacker on 10/14/2016
 //
 
 #include <iostream>
 #include <crtdbg.h>
 #include <list>
+#include <xstring>
 
 #include "../FakeList/FakeList.h"
 
@@ -33,47 +34,35 @@ string_builder build() {
 	return sb;
 }
 
-void test_pop_front() {
-	printf("test_pop_front\n");
+void test_replace(int _L, int _R, const char *_Str) {
+	printf("test_replace [%d,%d) to [%s]\n", _L, _R, _Str);
 
 	string_builder sb = build();
 	size_type _Size = sb.size();
+	size_type _Count = strlen(_Str);
 
-	while (!sb.empty()) {
-		sb.pop_front();
-		sb.print(true);
+	string_builder::const_iterator _IterL = sb.begin(), _IterR = sb.begin();
 
-		//check size
-		if(--_Size!=sb.size()) {
-			throw 1;
-		}
-	}
-}
+	for (int i = 0; i < _L; ++i, ++_IterL) {}
+	for (int i = 0; i < _R; ++i, ++_IterR) {}
 
-void test_pop_back() {
-	printf("test_pop_back\n");
+	sb.replace(_IterL, _IterR, _Str, _Count);
+	sb.print(true);
 
-	string_builder sb = build();
-	size_type _Size = sb.size();
-
-	printf("front:%c back:%c\n", sb.front(), sb.back());
-
-	while (!sb.empty()) {
-		sb.pop_back();
-		sb.print(true);
-		
-		//check size
-		if (--_Size != sb.size()) {
-			throw 1;
-		}
+	//check size
+	if (_Size - (_R - _L) + _Count != sb.size()) {
+		throw 1;
 	}
 }
 
 int main() {
 	//_CrtSetBreakAlloc(168);
 
-	test_pop_front();
-	test_pop_back();
+	for (int i = 0; i < 37; ++i) {
+		for (int j = i; j < 38; ++j) {
+			test_replace(i, j, "c");
+		}
+	}
 
 	_CrtDumpMemoryLeaks();
 

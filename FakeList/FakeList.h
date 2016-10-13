@@ -21,9 +21,9 @@ _NINI_BEGIN
 #define DEBUG_NEW_DELET_CHECK					0x00000100
 #define DEBUG_COUT_ERR_INF						0x00001000
 #define DEBUG_PRINT_NODE						0x00010000
-#define DEBUG_TOTLE_SIZE						0x00100000
-#define DEBUG_PREV_PTR							0x01000000
 
+#define DEBUG_PREV_PTR							0x00100000
+//TODO Add prev_ptr if needed
 
 #define DEFAULT_SIZE_OF_EACH_NODE				(1000000 / sizeof(_Ty))
 #define DEFAULT_SIZE_OF_EACH_NODE_CHAR			 1000000
@@ -226,12 +226,12 @@ public:
 	}
 
 	const_iterator &operator+=(size_type _Count) {
-		if (_Curpos + _Count >= _Curnode->_Size) {
-			_Count -= (_Curnode->_Size - _Curpos - 1);
+		if (_Curnode->_Size <= _Curpos + _Count) {
+			_Count -= (_Curnode->_Size - _Curpos);
 			_Curpos = 0;
 			_Curnode = _Curnode->_Next;
 
-			while (_Curpos + _Count >= _Curnode->_Size) {
+			while (_Curnode->_Size <= _Curpos + _Count) {
 				_Count -= _Curnode->_Size;
 				_Curnode = _Curnode->_Next;
 			}
@@ -239,6 +239,23 @@ public:
 		_Curpos += _Count;
 
 		return (*this);
+	}
+
+	size_type operator-(const const_iterator &_Right) const {
+		//*this-_Right, [Right,this)
+		if (this->_Curnode == _Right._Curnode) {
+			return this->_Curpos - _Right._Curpos;
+		}
+
+		size_type _Count = (_Right._Curnode->_Size - _Right._Curpos) + this->_Curpos;
+
+		node *_Tmp = _Right._Curnode->_Next;
+		while (_Tmp != this->_Curnode) {
+			_Count += _Tmp->_Size;
+			_Tmp = _Tmp->_Next;
+		}
+
+		return _Count;
 	}
 
 	const _Ty *operator->() const {
@@ -257,12 +274,27 @@ public:
 		return _Curpos != _Right._Curpos || _Curnode != _Right._Curnode;
 	}
 
+	void _Check_end_after_erase() {
+		if (_Curnode->_Size <= _Curpos) {
+			size_type _Count = _Curpos - _Curnode->_Size;
+			_Curpos = _Curnode->_Size;
+			*this += _Count;
+		}
+	}
+
 	node *_GetCurnode() const {
 		return _Curnode;
 	}
 
 	size_type _GetCurpos() const {
 		return _Curpos;
+	}
+
+	void _SetCurnode(node *_Curnode) {
+		this->_Curnode = _Curnode;
+	}
+	void _SetCurpos(size_type _Curpos) {
+		this->_Curpos = _Curpos;
 	}
 
 protected:
@@ -537,11 +569,7 @@ public:
 	}
 
 	//FakeList &insert(FakeList &&_FakeList, size_type _Pos) {
-
-	//}
-
-	//FakeList &insert(const FakeList &_FakeList, size_type _Pos) {
-
+		
 	//}
 
 	FakeList &append(const _Ty *_Elem, size_type _Count) {
@@ -699,9 +727,9 @@ public:
 	}
 	*/
 
-	//erase elements [_Begin,_End),this will disable iterator _Begin
+	//this will disable iterators
 	FakeList &erase(size_type _Begin, size_type _Count) {
-
+		//erase elements [_Begin,_End)
 #if(DEBUG &DEBUG_RANGE_CHECK)
 		if (_Begin + _Count > _Size)
 			throw std::out_of_range("FakeList");
@@ -725,8 +753,9 @@ public:
 		return erase(const_iterator(_L, _Begin), const_iterator(_R, _Count));
 	}
 
-	//erase elements [_Begin,_End),this will disable iterator _Begin
+	//this will disable iterators
 	FakeList &erase(const_iterator _Begin, const_iterator _End) {
+		//erase elements [_Begin,_End)
 		if (_Begin == _End) return (*this);
 
 		if (_Begin == this->begin() && _End == this->end()) {
@@ -749,7 +778,7 @@ public:
 				_Begin._GetCurnode()->_Size -= _End._GetCurpos();
 			}
 			else {
-				//not from beginning,separate the node
+				//not from beginning,separate the node,and disable _End iterator
 				node *_Sep_node = new node(*_Begin._GetCurnode());
 				_Sep_node->_Offset += _End._GetCurpos();
 				_Sep_node->_Size -= _End._GetCurpos();
@@ -802,10 +831,13 @@ public:
 		return (*this);
 	}
 
+	//this will disable the iterators
 	FakeList &replace(const_iterator _Begin, const_iterator _End, const _Ty *_Newval, int _Newval_Len) {
-		insert(_Newval, _Newval_Len, _Begin);
-		
+		size_type _Pos = _PosList(_End._GetCurnode(), _End._GetCurpos()) - (_End - _Begin);
+
 		erase(_Begin, _End);
+
+		insert(_Newval, _Newval_Len, _Pos);
 
 		return (*this);
 	}
@@ -985,10 +1017,23 @@ public:
 	void _Insert(_Ty *_Elem, size_type _Count, node *_Node, size_type _Pos) {
 		node *_Insert_node = new node(_Elem, _Count);
 		if (_Node->_Size == _Pos) {
+			//insert to the end of the node
 			_Insert_node->_Next = _Node->_Next;
 			_Node->_Next = _Insert_node;
 		}
+		else if (_Pos == 0) {
+			node *_Prev_node = _Prevnode(_Node);
+			if (_Prev_node) {
+				_Prev_node->_Next = _Insert_node;
+			}
+			else {
+				_Front = _Insert_node;
+			}
+			_Insert_node->_Next = _Node;
+		}
 		else {
+			//insert to mid of the node,disable the iterator
+			//TODO redesign the iterator if possible
 			node *_Sep_node = new node(*_Node);
 
 			_Sep_node->_Offset += _Pos;
@@ -1022,6 +1067,15 @@ public:
 			_Node = _Node->_Next;
 		}
 		return _Node;
+	}
+
+	size_type _PosList(node *_Node, size_type _Pos) {
+		node *_Tmp = _Front;
+		while (_Tmp != _Node) {
+			_Pos += _Tmp->_Size;
+			_Tmp = _Tmp->_Next;
+		}
+		return _Pos;
 	}
 
 	_Ty *_Clone(const _Ty *_Elem, size_type _Count) {

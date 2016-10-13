@@ -1,11 +1,11 @@
 //
-//	Created by ABacker on 10/13/2016
+//	Created by ABacker on 10/14/2016
 //
 
 #include <iostream>
 #include <crtdbg.h>
 #include <list>
-
+#include <xstring>
 #include "../FakeList/FakeList.h"
 
 #define CRTDBG_MAP_ALLOC
@@ -33,47 +33,40 @@ string_builder build() {
 	return sb;
 }
 
-void test_pop_front() {
-	printf("test_pop_front\n");
+void test_format_clone() {
+	printf("test_format_clone\n");
 
-	string_builder sb = build();
-	size_type _Size = sb.size();
+	string_builder sb1 = build();
+	string_builder sb2 = sb1.clone();
 
-	while (!sb.empty()) {
-		sb.pop_front();
-		sb.print(true);
-
-		//check size
-		if(--_Size!=sb.size()) {
-			throw 1;
-		}
-	}
+	sb2.print(true);
+	sb1.format();
+	sb1.print(true);
 }
 
-void test_pop_back() {
-	printf("test_pop_back\n");
+void test_clone() {
+	printf("test_clone\n");
 
-	string_builder sb = build();
-	size_type _Size = sb.size();
+	char *s1 = new char[30];
+	strcpy_s(s1, sizeof(char)* 30, "1234567890");
+	string_builder sb1(std::move(s1));
+	cout << sb1.to_string() << endl;
 
-	printf("front:%c back:%c\n", sb.front(), sb.back());
+	sb1.print(true);
+	string_builder sb2 = sb1.clone(3);
+	sb2.print(true);
 
-	while (!sb.empty()) {
-		sb.pop_back();
-		sb.print(true);
-		
-		//check size
-		if (--_Size != sb.size()) {
-			throw 1;
-		}
-	}
+	sb1.format(4);
+	sb1.print(true);
+
+	list<int>l;
 }
 
 int main() {
 	//_CrtSetBreakAlloc(168);
 
-	test_pop_front();
-	test_pop_back();
+	test_format_clone();
+	test_clone();
 
 	_CrtDumpMemoryLeaks();
 
