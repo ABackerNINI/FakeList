@@ -591,6 +591,8 @@ public:
 		_FakeList._Front = NULL;
 		_FakeList._Back = NULL;
 
+		_Size += _FakeList._Size;
+
 		return (*this);
 	}
 
@@ -603,6 +605,8 @@ public:
 		_Node->_Next = _Front;
 		_Front = _Node;
 
+		_Size += _Count;
+
 		return (*this);
 	}
 
@@ -613,6 +617,8 @@ public:
 
 		_Node->_Next = _Front;
 		_Front = _Node;
+
+		_Size +=_Count;
 
 		return (*this);
 	}
@@ -714,84 +720,6 @@ public:
 		}
 
 		return erase(const_iterator(_L, _Begin), const_iterator(_R, _Count));
-
-		//if (_Count == 0)return (*this);
-		//
-		//if (_Begin == 0 && _Count == _Size) {
-		//	//erase all
-		//	_Tidy(_Front);
-		//	_Tidy();
-		//
-		//	return (*this);
-		//}
-		//else if (_Begin == 0 && _Count >= _Front->_Size) {
-		//	//erase from beginning and cross node
-		//	node *_Node = _Front;
-		//	node *_Tmp;
-		//
-		//	while (_Node != NULL) {
-		//		_Tmp = _Node;
-		//		if (_Node->_Size > _Count) {
-		//			_Front = _Node;
-		//			_Front->_Offset += _Count;
-		//			_Front->_Size -= _Count;
-		//			break;
-		//		}
-		//		_Count -= _Node->_Size;
-		//		_Node = _Node->_Next;
-		//
-		//		delete _Tmp;
-		//	}
-		//}
-		//else if (_Begin + _Count == _Size&&_Count >= _Back->_Size) {
-		//	//erase to end and cross node
-		//	node *_Node = _Posnode(&_Begin);
-		//
-		//	_Tidy(_Node->_Next);
-		//
-		//	_Node->_Size = _Begin;
-		//	_Node->_Next = NULL;
-		//
-		//	_Back = _Node;
-		//}
-		//else {
-		//	//erase from beginning/to end and not cross node, erase not from beginning and not to end
-		//	node *_Node = _Posnode(&_Begin);
-		//	if (_Count < _Node->_Size - _Begin) {
-		//		//all in one node
-		//		node *_Sep_node = new node(*_Node);
-		//		_Sep_node->_Size = _Node->_Size - (_Begin + _Count);
-		//		_Sep_node->_Offset += _Begin + _Count;
-		//		_Node->_Size = _Begin;
-		//		_Node->_Next = _Sep_node;
-		//	}
-		//	else {
-		//		//cross node
-		//		node *_LHalf = _Node;
-		//		_Count -= _Node->_Size - _Begin;
-		//		_Node->_Size = _Begin;
-		//		_Node = _Node->_Next;
-		//
-		//		node *_Tmp;
-		//		while (_Node != NULL) {
-		//			_Tmp = _Node;
-		//			if (_Node->_Size > _Count) {
-		//				_Node->_Offset += _Count;
-		//				_Node->_Size -= _Count;
-		//				_LHalf->_Next = _Node;
-		//				break;
-		//			}
-		//			_Count -= _Node->_Size;
-		//			_Node = _Node->_Next;
-		//
-		//			delete _Tmp;
-		//		}
-		//	}
-		//}
-		//
-		//_Size -= _Count;
-		//
-		//return (*this);
 	}
 
 	//erase elements [_Begin,_End),this will disable iterator _Begin
@@ -805,7 +733,6 @@ public:
 
 			return (*this);
 		}
-
 
 		size_type _Count = 0;
 
@@ -865,38 +792,6 @@ public:
 				//_Back node will be deleted
 				_Back = _PrevL;
 			}
-
-			////affect _Front:erase from beginning and cross node
-			//if (_Begin == this->begin() && _End._GetCurnode() != this->_Front) {
-			//	_Front = _End._GetCurnode();
-			//}
-
-			////affect _Back:erase to end and cross node or erase all _Back node
-			//if (_End == this->end() && (_Begin._GetCurnode() != this->_Back || (_Begin._GetCurnode() == this->_Back && _Begin._GetCurpos() == 0))) {
-			//	_Back = _Begin._GetCurnode();
-			//}
-			//if (_Begin._GetCurpos() == 0) {
-			//	node *_Node = _Prevnode(_Begin._GetCurnode());
-			//	if (_Node) {
-			//		_Node->_Next = _End._GetCurnode();
-			//	}
-			//	else {
-			//		_Front = _End._GetCurnode();
-			//	}
-			//	delete _Begin._GetCurnode();
-			//}
-
-			//if (_End._GetCurpos() + 1 == _End._GetCurnode()->_Size) {
-
-			//}
-
-			//_Count += (_Begin._GetCurnode()->_Size - _Begin._GetCurpos()) + _End._GetCurpos();
-			//_Count += _Tidy(_Begin._GetCurnode()->_Next, _End._GetCurnode());
-
-			//_Begin._GetCurnode()->_Next = _End._GetCurnode();
-			//_Begin._GetCurnode()->_Size = _Begin._GetCurpos();
-			//_End._GetCurnode()->_Offset += _End._GetCurpos();
-			//_End._GetCurnode()->_Size -= _End._GetCurpos();
 		}
 
 		_Size -= _Count;
@@ -904,11 +799,15 @@ public:
 		return (*this);
 	}
 
-	//FakeList &replace(iterator _Begin, iterator _End, _Ty *_Newval, int _Newval_Len) {
+	FakeList &replace(const_iterator _Begin, const_iterator _End, const _Ty *_Newval, int _Newval_Len) {
+		insert(_Newval, _Newval_Len, _Begin);
+		
+		erase(_Begin, _End);
 
-	//}
+		return (*this);
+	}
 
-	//FakeList &replace(size_type _Begin, size_type _Count, _Ty *_Newval, size_type _Newval_Len) {
+	//FakeList &replace(size_type _Begin, size_type _Count, const _Ty *_Newval, size_type _Newval_Len) {
 
 	//}
 

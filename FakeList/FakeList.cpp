@@ -75,12 +75,41 @@ void test_clone() {
 	list<int>l;
 }
 
-int main(){
+void test_replace(int _L, int _R, const char *_Str) {
+	printf("test_replace [%d,%d) to [%s]\n", _L, _R, _Str);
+
+	string_builder sb = build();
+	size_type _Size = sb.size();
+	size_type _Count = strlen(_Str);
+
+	string_builder::const_iterator _IterL = sb.begin(), _IterR = sb.begin();
+
+	for (int i = 0; i < _L; ++i, ++_IterL) {}
+	for (int i = 0; i < _R; ++i, ++_IterR) {}
+
+	sb.replace(_IterL, _IterR, _Str, _Count);
+	sb.print(true);
+
+	//check size
+	if (_Size - (_R - _L) + _Count != sb.size()) {
+		throw 1;
+	}
+}
+
+int main() {
 	//_CrtSetBreakAlloc(168);
 
 	test_format_clone();
 	test_operator();
 	test_clone();
+
+	test_replace(1, 2, "c");
+
+	for (int i = 0; i < 37; ++i) {
+		for (int j = i; j < 38; ++j) {
+			test_replace(i, j, "c");
+		}
+	}
 
 	_CrtDumpMemoryLeaks();
 
