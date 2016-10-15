@@ -23,7 +23,7 @@ _NINI_BEGIN
 #define DEBUG_PRINT_NODE						0x00010000
 
 #define DEBUG_PREV_PTR							0x00100000
-//TODO Add prev_ptr if needed
+//TODO Add prev_ptr
 
 #define DEFAULT_SIZE_OF_EACH_NODE				(1000000 / sizeof(_Ty))
 #define DEFAULT_SIZE_OF_EACH_NODE_CHAR			 1000000
@@ -542,7 +542,7 @@ public:
 		return (*this);
 	}
 
-	//may disable the iterator
+	//this will disable the iterator
 	FakeList &insert(const _Ty *_Elem, size_type _Count, const_iterator _Iter) {
 		if (_Iter == this->begin())return push_front(_Elem, _Count);
 
@@ -557,7 +557,7 @@ public:
 		return (*this);
 	}
 
-	//may disable the iterator
+	//this will disable the iterator
 	FakeList &insert(_Ty *&&_Elem, size_type _Count, const_iterator _Iter) {
 		if (_Iter == this->begin())return push_front(_Elem, _Count);
 
@@ -1053,7 +1053,7 @@ public:
 		}
 		else {
 			//insert to mid of the node,disable the iterator
-			//TODO redesign the iterator if possible
+			//redesign the iterator if possible
 			node *_Sep_node = new node(*_Node);
 
 			_Sep_node->_Offset += _Pos;
@@ -1066,8 +1066,8 @@ public:
 		}
 	}
 
-	//return NULL if _Node is the head
 	node *_Prevnode(node *_Node) {
+		//return NULL if _Node is the head
 		node *_Tmp = _Front;
 		while (_Tmp != NULL &&_Tmp->_Next != _Node) {
 			_Tmp = _Tmp->_Next;
@@ -1075,8 +1075,8 @@ public:
 		return _Tmp;
 	}
 
-	//find the node contains _Pos-th element,it never points to the beginning of a node
 	node *_Posnode(size_type *_Pos) {
+		//find the node contains _Pos-th element,it never points to the beginning of a node
 		node *_Node = _Front;
 		while (_Node != NULL) {
 			if (_Node->_Size >= *_Pos) {
