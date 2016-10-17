@@ -508,7 +508,7 @@ public:
 		if (_Size < _Pos)
 			throw std::out_of_range("FakeList");
 #endif
-		if (_Size == _Pos)return append(_Elem, _Count);
+		if (_Size == _Pos)return push_back(_Elem, _Count);
 
 		if (_Pos == 0)return push_front(_Elem, _Count);
 
@@ -528,7 +528,7 @@ public:
 		if (_Size < _Pos)
 			throw std::out_of_range("FakeList");
 #endif
-		if (_Size == _Pos)return append(_Elem, _Count);
+		if (_Size == _Pos)return push_back(_Elem, _Count);
 
 		if (_Pos == 0)return push_front(_Elem, _Count);
 
@@ -547,7 +547,7 @@ public:
 	FakeList &insert(const _Ty *_Elem, size_type _Count, const_iterator _Iter) {
 		if (_Iter == this->begin())return push_front(_Elem, _Count);
 
-		if (_Iter == this->end())return append(_Elem, _Count);
+		if (_Iter == this->end())return push_back(_Elem, _Count);
 
 		_Ty *_NewData = _Clone(_Elem, _Count);
 
@@ -562,7 +562,7 @@ public:
 	FakeList &insert(_Ty *&&_Elem, size_type _Count, const_iterator _Iter) {
 		if (_Iter == this->begin())return push_front(_Elem, _Count);
 
-		if (_Iter == this->end())return append(_Elem, _Count);
+		if (_Iter == this->end())return push_back(_Elem, _Count);
 
 		_Insert(_Elem, _Count, _Iter._GetCurnode(), _Iter._GetCurpos());
 
@@ -603,6 +603,26 @@ public:
 		return (*this);
 	}
 
+	FakeList &push_front(const _Ty &_Elem) {
+		return push_front(&_Elem, 1);
+	}
+
+	FakeList &push_front(_Ty &&_Elem) {
+		return push_front(std::move(&_Elem), 1);
+	}
+
+	FakeList &push_front(FakeList &&_FakeList) {
+		_FakeList._Back->_Next = this->_Front;
+		this->_Front = _FakeList._Front;
+
+		_FakeList._Front = NULL;
+		_FakeList._Back = NULL;
+
+		this->_Size += _FakeList._Size;
+
+		return (*this);
+	}
+
 	FakeList &push_back(const _Ty *_Elem, size_type _Count) {
 		_Ty *_NewData = _Clone(_Elem, _Count);
 
@@ -638,11 +658,11 @@ public:
 	}
 
 	FakeList &push_back(const _Ty &_Elem) {
-		return append(&_Elem, 1);
+		return push_back(&_Elem, 1);
 	}
 
 	FakeList &push_back(_Ty &&_Elem) {
-		return append(std::move(&_Elem), 1);
+		return push_back(std::move(&_Elem), 1);
 	}
 
 	FakeList &push_back(FakeList &&_FakeList) {
@@ -1247,12 +1267,12 @@ public:
 		}*/
 
 protected:
-	static char *_Clone(const char *_String, size_type _Count) {
-		char *_New_string = new char[_Count];
-		memcpy(_New_string, _String, sizeof(char)*_Count);
-
-		return _New_string;
-	}
+//	static char *_Clone(const char *_String, size_type _Count) {
+//		char *_New_string = new char[_Count];
+//		memcpy(_New_string, _String, sizeof(char)*_Count);
+//
+//		return _New_string;
+//	}
 };
 
 inline string_builder operator+(const char *_String, string_builder &&_String_builder) {
