@@ -297,6 +297,7 @@ public:
 	void _SetCurnode(node *_Curnode) {
 		this->_Curnode = _Curnode;
 	}
+
 	void _SetCurpos(size_type _Curpos) {
 		this->_Curpos = _Curpos;
 	}
@@ -576,64 +577,8 @@ public:
 		
 	//}
 
-	FakeList &append(const _Ty *_Elem, size_type _Count) {
-		_Ty *_NewData = new _Ty[_Count];
-		memcpy(_NewData, _Elem, sizeof(_Ty)*_Count);
-
-		if (_Front == NULL) {
-			_Front = new node(_NewData, _Count);
-			_Back = _Front;
-		}
-		else {
-			_Back->_Next = new node(_NewData, _Count);
-			_Back = _Back->_Next;
-		}
-
-		_Size += _Count;
-
-		return (*this);
-	}
-
-	FakeList &append(_Ty *&&_Elem, size_type _Count) {
-		if (_Front == NULL) {
-			_Front = new node(_Elem, _Count);
-			_Back = _Front;
-		}
-		else {
-			_Back->_Next = new node(_Elem, _Count);
-			_Back = _Back->_Next;
-		}
-
-		_Elem = NULL;
-
-		_Size += _Count;
-
-		return (*this);
-	}
-
-	FakeList &append(const _Ty &_Elem) {
-		return append(&_Elem, 1);
-	}
-
-	FakeList &append(_Ty &&_Elem) {
-		return append(std::move(&_Elem), 1);
-	}
-
-	FakeList &append(FakeList &&_FakeList) {
-		_Back->_Next = _FakeList._Front;
-		_Back = _FakeList._Back;
-
-		_FakeList._Front = NULL;
-		_FakeList._Back = NULL;
-
-		_Size += _FakeList._Size;
-
-		return (*this);
-	}
-
 	FakeList &push_front(const _Ty *_Elem, size_type _Count) {
-		_Ty *_NewData = new _Ty[_Count];
-		memcpy(_NewData, _Elem, sizeof(_Ty)*_Count);
+		_Ty *_NewData = _Clone(_Elem, _Count);
 
 		node *_Node = new node(_NewData, _Count);
 
@@ -658,16 +603,58 @@ public:
 		return (*this);
 	}
 
-	FakeList &push_back(_Ty *_Elem, size_type _Count) {
-		return append(_Elem, _Count);
+	FakeList &push_back(const _Ty *_Elem, size_type _Count) {
+		_Ty *_NewData = _Clone(_Elem, _Count);
+
+		if (_Front == NULL) {
+			_Front = new node(_NewData, _Count);
+			_Back = _Front;
+		}
+		else {
+			_Back->_Next = new node(_NewData, _Count);
+			_Back = _Back->_Next;
+		}
+
+		_Size += _Count;
+
+		return (*this);
+	}
+
+	FakeList &push_back(_Ty *&&_Elem, size_type _Count) {
+		if (_Front == NULL) {
+			_Front = new node(_Elem, _Count);
+			_Back = _Front;
+		}
+		else {
+			_Back->_Next = new node(_Elem, _Count);
+			_Back = _Back->_Next;
+		}
+
+		_Elem = NULL;
+
+		_Size += _Count;
+
+		return (*this);
 	}
 
 	FakeList &push_back(const _Ty &_Elem) {
-		return append(_Elem);
+		return append(&_Elem, 1);
 	}
 
 	FakeList &push_back(_Ty &&_Elem) {
-		return append(std::move(_Elem));
+		return append(std::move(&_Elem), 1);
+	}
+
+	FakeList &push_back(FakeList &&_FakeList) {
+		_Back->_Next = _FakeList._Front;
+		_Back = _FakeList._Back;
+
+		_FakeList._Front = NULL;
+		_FakeList._Back = NULL;
+
+		_Size += _FakeList._Size;
+
+		return (*this);
 	}
 
 	FakeList &pop_front() {
@@ -1162,49 +1149,49 @@ public:
 	}
 
 	string_builder &operator+=(const char *_Right) {
-		FakeList::append(_Right, strlen(_Right));
+		FakeList::push_back(_Right, strlen(_Right));
 
 		return (*this);
 	}
 
 	string_builder &operator+=(char *&&_Right) {
-		FakeList::append(std::move(_Right), strlen(_Right));
+		FakeList::push_back(std::move(_Right), strlen(_Right));
 
 		return (*this);
 	}
 
 	string_builder &operator+=(string_builder &&_Right) {
-		FakeList::append(std::move(_Right));
+		FakeList::push_back(std::move(_Right));
 
 		return (*this);
 	}
 
 	string_builder &append(const char *_String) {
-		base::append(_String, strlen(_String));
+		base::push_back(_String, strlen(_String));
 
 		return (*this);
 	}
 
 	string_builder &append(char *&&_String) {
-		base::append(std::move(_String), strlen(_String));
+		base::push_back(std::move(_String), strlen(_String));
 
 		return (*this);
 	}
 
 	string_builder &append(const char *_String, size_type _Count) {
-		base::append(_String, _Count);
+		base::push_back(_String, _Count);
 
 		return (*this);
 	}
 
 	string_builder &append(char *&&_String, size_type _Count) {
-		base::append(std::move(_String), _Count);
+		base::push_back(std::move(_String), _Count);
 
 		return (*this);
 	}
 
 	string_builder &append(string_builder &&_Str_builder) {
-		base::append(std::move(_Str_builder));
+		base::push_back(std::move(_Str_builder));
 
 		return (*this);
 	}
