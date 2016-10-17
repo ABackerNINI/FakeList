@@ -74,7 +74,7 @@ public:
 
 	_FakeList_node(const node &_Node)
 		:_Size(_Node._Size), _Offset(_Node._Offset), _Next(_Node._Next), _Ptr(_Node._Ptr) {
-		if (this != &_Node && _Ptr)
+		if (/*this != &_Node && */_Ptr)
 			++_Ptr->_Ref;
 	}
 
@@ -271,19 +271,11 @@ public:
 	}
 
 	bool operator==(const const_iterator &_Right) const {
-		return _Curpos == _Right._Curpos && _Curnode == _Right._Curnode;
+		return this->_Curpos == _Right._Curpos && this->_Curnode == _Right._Curnode;
 	}
 
 	bool operator!=(const const_iterator &_Right) const {
-		return _Curpos != _Right._Curpos || _Curnode != _Right._Curnode;
-	}
-
-	void _Check_end_after_erase() {
-		if (_Curnode->_Size <= _Curpos) {
-			size_type _Count = _Curpos - _Curnode->_Size;
-			_Curpos = _Curnode->_Size;
-			*this += _Count;
-		}
+		return this->_Curpos != _Right._Curpos || this->_Curnode != _Right._Curnode;
 	}
 
 	node *_GetCurnode() const {
@@ -487,17 +479,17 @@ public:
 	}
 
 	FakeList &assign(FakeList &&_FakeList) {
-		std::swap(_Size, _FakeList._Size);
-		std::swap(_Front, _FakeList._Front);
-		std::swap(_Back, _FakeList._Back);
+		std::swap(this->_Size, _FakeList._Size);
+		std::swap(this->_Front, _FakeList._Front);
+		std::swap(this->_Back, _FakeList._Back);
 
 		return *this;
 	}
 
 	FakeList &assign(const FakeList &_FakeList) {
-		_Size = _FakeList._Size;
-		_Front = _FakeList._Front;
-		_Back = _FakeList._Back;
+		this->_Size = _FakeList._Size;
+		this->_Front = _FakeList._Front;
+		this->_Back = _FakeList._Back;
 
 		return (*this);
 	}
@@ -574,7 +566,7 @@ public:
 	}
 
 	//FakeList &insert(FakeList &&_FakeList, size_type _Pos) {
-		
+
 	//}
 
 	FakeList &push_front(const _Ty *_Elem, size_type _Count) {
@@ -598,7 +590,7 @@ public:
 		_Node->_Next = _Front;
 		_Front = _Node;
 
-		_Size +=_Count;
+		_Size += _Count;
 
 		return (*this);
 	}
@@ -666,13 +658,13 @@ public:
 	}
 
 	FakeList &push_back(FakeList &&_FakeList) {
-		_Back->_Next = _FakeList._Front;
-		_Back = _FakeList._Back;
+		this->_Back->_Next = _FakeList._Front;
+		this->_Back = _FakeList._Back;
 
 		_FakeList._Front = NULL;
 		_FakeList._Back = NULL;
 
-		_Size += _FakeList._Size;
+		this->_Size += _FakeList._Size;
 
 		return (*this);
 	}
@@ -752,7 +744,7 @@ public:
 		_L = _Posnode(&_Begin);
 		_R = _Posnode(&_Count);
 
-		if(_Begin == _L->_Size) {
+		if (_Begin == _L->_Size) {
 			_Begin = 0;
 			_L = _L->_Next;
 		}
@@ -1186,31 +1178,73 @@ public:
 		return (*this);
 	}
 
-	string_builder &append(const char *_String) {
+	string_builder &push_front(const char *_String) {
+		base::push_front(_String, strlen(_String));
+
+		return (*this);
+	}
+
+	string_builder &push_front(char *&&_String) {
+		base::push_front(std::move(_String), strlen(_String));
+
+		return (*this);
+	}
+
+	string_builder &push_front(const char *_String, size_type _Count) {
+		base::push_front(_String, _Count);
+
+		return (*this);
+	}
+
+	string_builder &push_front(char *&&_String, size_type _Count) {
+		base::push_front(std::move(_String), _Count);
+
+		return (*this);
+	}
+
+	string_builder &push_front(char _C) {
+		base::push_front(_C);
+
+		return (*this);
+	}
+
+	string_builder &push_front(string_builder &&_Str_builder) {
+		base::push_front(std::move(_Str_builder));
+
+		return (*this);
+	}
+
+	string_builder &push_back(const char *_String) {
 		base::push_back(_String, strlen(_String));
 
 		return (*this);
 	}
 
-	string_builder &append(char *&&_String) {
+	string_builder &push_back(char *&&_String) {
 		base::push_back(std::move(_String), strlen(_String));
 
 		return (*this);
 	}
 
-	string_builder &append(const char *_String, size_type _Count) {
+	string_builder &push_back(const char *_String, size_type _Count) {
 		base::push_back(_String, _Count);
 
 		return (*this);
 	}
 
-	string_builder &append(char *&&_String, size_type _Count) {
+	string_builder &push_back(char *&&_String, size_type _Count) {
 		base::push_back(std::move(_String), _Count);
 
 		return (*this);
 	}
 
-	string_builder &append(string_builder &&_Str_builder) {
+	string_builder &push_back(char _C) {
+		base::push_back(_C);
+
+		return (*this);
+	}
+
+	string_builder &push_back(string_builder &&_Str_builder) {
 		base::push_back(std::move(_Str_builder));
 
 		return (*this);
@@ -1230,7 +1264,7 @@ public:
 
 		return _Str;
 	}
-	
+
 	string_builder clone(size_type _Max_size_of_each_node = DEFAULT_SIZE_OF_EACH_NODE_CHAR) const {
 		string_builder _Ret;
 
@@ -1267,12 +1301,12 @@ public:
 		}*/
 
 protected:
-//	static char *_Clone(const char *_String, size_type _Count) {
-//		char *_New_string = new char[_Count];
-//		memcpy(_New_string, _String, sizeof(char)*_Count);
-//
-//		return _New_string;
-//	}
+	//	static char *_Clone(const char *_String, size_type _Count) {
+	//		char *_New_string = new char[_Count];
+	//		memcpy(_New_string, _String, sizeof(char)*_Count);
+	//
+	//		return _New_string;
+	//	}
 };
 
 inline string_builder operator+(const char *_String, string_builder &&_String_builder) {
