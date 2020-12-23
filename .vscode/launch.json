@@ -5,7 +5,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/foo",
+            "program": "${workspaceFolder}/FakeList",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

@@ -1,4 +1,7 @@
 {
     // Visual Studio, LLVM, Google, Chromium, Mozilla, WebKit, none
-    "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, IndentWidth: 4, ColumnLimit: 80}"
+    "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, IndentWidth: 4, ColumnLimit: 80}",
+    "files.associations": {
+        "string": "cpp"
+    }
 }

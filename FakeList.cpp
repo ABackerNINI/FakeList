@@ -49,5 +49,7 @@ void test_operator() {
 int main() {
 	test_operator();
 
+	string_builder sb = "xxx";
+
 	return 0;
 }

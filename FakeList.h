@@ -1163,6 +1163,28 @@ class string_builder : public FakeList<char> {
         return (*this);
     }
 
+    string_builder &append(const char *_String) {
+        return this->push_back(_String);
+    }
+
+    string_builder &append(char *&&_String) {
+        return this->push_back(std::move(_String));
+    }
+
+    string_builder &append(const char *_String, size_type _Count) {
+        return this->push_back(_String, _Count);
+    }
+
+    string_builder &append(char *&&_String, size_type _Count) {
+        return this->push_back(_String, _Count);
+    }
+
+    string_builder &append(char _C) { return this->push_back(_C); }
+
+    string_builder &append(string_builder &&_Str_builder) {
+        return this->push_back(std::move(_Str_builder));
+    }
+
     std::string to_string() const {
         std::string _Str;
 
