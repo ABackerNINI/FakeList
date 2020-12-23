@@ -3,10 +3,10 @@
 //
 
 #include "FakeList.h"
-#include <iostream>
-#include <crtdbg.h>
+
 #include <list>
-#include <xstring>
+#include <cstring>
+#include <iostream>
 
 #define CRTDBG_MAP_ALLOC
 
@@ -16,7 +16,7 @@ using namespace nini;
 string_builder build() {
 	string_builder sb;
 	char *s = new char[15];
-	strcpy_s(s, sizeof(char)* 15, "1234567890");
+	strcpy(s, "1234567890");
 	sb.assign(std::move(s), strlen(s));
 
 	sb.append("1234567890");
@@ -37,7 +37,7 @@ void test_operator() {
 	printf("test_operator\n");
 
 	string_builder sb1 = build();
-	sb1 += "test_opeator";
+	sb1 += "test_operator";
 	sb1.print(true);
 	string_builder sb2 = build();
 	sb1 += std::move(sb2);
@@ -47,11 +47,7 @@ void test_operator() {
 }
 
 int main() {
-	//_CrtSetBreakAlloc(168);
-
 	test_operator();
-
-	_CrtDumpMemoryLeaks();
 
 	return 0;
 }
