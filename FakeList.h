@@ -38,7 +38,7 @@ typedef unsigned int size_type;
 template <class _Ty>
 class _FakeList_node_ptr {
    public:
-    _FakeList_node_ptr() : _Data(NULL), _Ref(0) {}
+    _FakeList_node_ptr() : _Data(nullptr), _Ref(0) {}
 
     explicit _FakeList_node_ptr(_Ty *data) : _Data(data), _Ref(1) {}
 
@@ -61,10 +61,10 @@ class _FakeList_node {
     typedef _FakeList_node_ptr<_Ty> ptr;
     typedef _FakeList_node<_Ty> node;
 
-    _FakeList_node() : _Size(0), _Offset(0), _Next(NULL), _Ptr(NULL) {}
+    _FakeList_node() : _Size(0), _Offset(0), _Next(nullptr), _Ptr(nullptr) {}
 
     _FakeList_node(_Ty *_Data, size_type _Size, size_type _Offset = 0,
-                   node *_Next = NULL)
+                   node *_Next = nullptr)
         : _Size(_Size), _Offset(_Offset), _Next(_Next), _Ptr(new ptr(_Data)) {}
 
     _FakeList_node(const node &_Node)
@@ -110,7 +110,7 @@ class _FakeList_node {
     }
 
     node &assign(_Ty *_Data, size_type _Size, size_type _Offset = 0,
-                 node *_Next = NULL) {
+                 node *_Next = nullptr) {
         if (_Ptr && (--_Ptr->_Ref == 0)) {
             delete[] _Ptr->_Data;
             this->_Ptr->_Data = _Data;
@@ -155,8 +155,8 @@ class _FakeList_node {
     void _Tidy() {
         this->_Size = 0;
         this->_Offset = 0;
-        this->_Next = NULL;
-        this->_Ptr = NULL;
+        this->_Next = nullptr;
+        this->_Ptr = nullptr;
     }
 
     void _Dis() {
@@ -185,7 +185,7 @@ class _FakeList_const_iterator {
     typedef _FakeList_node<_Ty> node;
     typedef _FakeList_const_iterator<_Ty> const_iterator;
 
-    _FakeList_const_iterator() : _Curnode(NULL), _Curpos(0) {}
+    _FakeList_const_iterator() : _Curnode(nullptr), _Curpos(0) {}
 
     _FakeList_const_iterator(node *_Curnode, size_type _Curpos)
         : _Curnode(_Curnode), _Curpos(_Curpos) {}
@@ -333,7 +333,7 @@ class _FakeList_iterator : public _FakeList_const_iterator<_Ty> {
 //
 // public:
 //	_FakeList_ptr()
-//		:_Size(0), _Front(NULL), _Back(NULL), _Ref(0) {
+//		:_Size(0), _Front(nullptr), _Back(nullptr), _Ref(0) {
 //	}
 //
 // public:
@@ -351,21 +351,21 @@ class FakeList {
     typedef _FakeList_iterator<_Ty> iterator;
     typedef _FakeList_const_iterator<_Ty> const_iterator;
 
-    FakeList() : _Size(0), _Front(NULL), _Back(NULL) {}
+    FakeList() : _Size(0), _Front(nullptr), _Back(nullptr) {}
 
-    FakeList(const _Ty *_Elem, size_type _Count) : _Front(NULL) {
+    FakeList(const _Ty *_Elem, size_type _Count) : _Front(nullptr) {
         assign(_Elem, _Count);
     }
 
-    FakeList(_Ty *&&_Elem, size_type _Count) : _Front(NULL) {
+    FakeList(_Ty *&&_Elem, size_type _Count) : _Front(nullptr) {
         assign(std::move(_Elem), _Count);
     }
 
-    FakeList(FakeList &&_FakeList) : _Front(NULL) {
+    FakeList(FakeList &&_FakeList) : _Front(nullptr) {
         assign(std::move(_FakeList));
     }
 
-    FakeList(const FakeList &_FakeList) : _Front(NULL) { assign(_FakeList); }
+    FakeList(const FakeList &_FakeList) : _Front(nullptr) { assign(_FakeList); }
 
     FakeList &operator=(FakeList &&_Right) { return assign(std::move(_Right)); }
 
@@ -377,7 +377,7 @@ class FakeList {
 #endif
 
         node *_Node = _Front;
-        while (_Node != NULL) {
+        while (_Node != nullptr) {
             if (_Node->_Size > _Pos) return (*_Node)[_Pos];
 
             _Pos -= _Node->_Size;
@@ -391,7 +391,7 @@ class FakeList {
         if (_Pos + 1 > _Size) throw std::out_of_range("FakeList");
 #endif
         node *_Node = _Front;
-        while (_Node != NULL) {
+        while (_Node != nullptr) {
             if (_Node->_Size > _Pos) return (*_Node)[_Pos];
 
             _Pos -= _Node->_Size;
@@ -403,7 +403,7 @@ class FakeList {
     FakeList &assign(const _Ty *_Elem, size_type _Count) {
         _Ty *data = _Clone(_Elem, _Count);
 
-        if (_Front == NULL)
+        if (_Front == nullptr)
             _Front = new node(data, _Count);
         else {
             _Tidy(_Front->_Next);
@@ -417,14 +417,14 @@ class FakeList {
     }
 
     FakeList &assign(_Ty *&&_Elem, size_type _Count) {
-        if (_Front == NULL)
+        if (_Front == nullptr)
             _Front = new node(_Elem, _Count);
         else {
             _Tidy(_Front->_Next);
-            _Front->assign(_Elem, _Count, 0, NULL);
+            _Front->assign(_Elem, _Count, 0, nullptr);
         }
 
-        _Elem = NULL;
+        _Elem = nullptr;
 
         _Size = _Count;
         _Back = _Front;
@@ -478,7 +478,7 @@ class FakeList {
 
         _Insert(_Elem, _Count, _Node, _Pos);
 
-        _Elem = NULL;
+        _Elem = nullptr;
 
         _Size += _Count;
 
@@ -508,7 +508,7 @@ class FakeList {
 
         _Insert(_Elem, _Count, _Iter._GetCurnode(), _Iter._GetCurpos());
 
-        _Elem = NULL;
+        _Elem = nullptr;
 
         _Size += _Count;
 
@@ -535,7 +535,7 @@ class FakeList {
     FakeList &push_front(_Ty *&&_Elem, size_type _Count) {
         node *_Node = new node(_Elem, _Count);
 
-        _Elem = NULL;
+        _Elem = nullptr;
 
         _Node->_Next = _Front;
         _Front = _Node;
@@ -555,8 +555,8 @@ class FakeList {
         _FakeList._Back->_Next = this->_Front;
         this->_Front = _FakeList._Front;
 
-        _FakeList._Front = NULL;
-        _FakeList._Back = NULL;
+        _FakeList._Front = nullptr;
+        _FakeList._Back = nullptr;
 
         this->_Size += _FakeList._Size;
 
@@ -566,7 +566,7 @@ class FakeList {
     FakeList &push_back(const _Ty *_Elem, size_type _Count) {
         _Ty *_NewData = _Clone(_Elem, _Count);
 
-        if (_Front == NULL) {
+        if (_Front == nullptr) {
             _Front = new node(_NewData, _Count);
             _Back = _Front;
         } else {
@@ -580,7 +580,7 @@ class FakeList {
     }
 
     FakeList &push_back(_Ty *&&_Elem, size_type _Count) {
-        if (_Front == NULL) {
+        if (_Front == nullptr) {
             _Front = new node(_Elem, _Count);
             _Back = _Front;
         } else {
@@ -588,7 +588,7 @@ class FakeList {
             _Back = _Back->_Next;
         }
 
-        _Elem = NULL;
+        _Elem = nullptr;
 
         _Size += _Count;
 
@@ -603,8 +603,8 @@ class FakeList {
         this->_Back->_Next = _FakeList._Front;
         this->_Back = _FakeList._Back;
 
-        _FakeList._Front = NULL;
-        _FakeList._Back = NULL;
+        _FakeList._Front = nullptr;
+        _FakeList._Back = nullptr;
 
         this->_Size += _FakeList._Size;
 
@@ -622,7 +622,7 @@ class FakeList {
         } else
             ++_Front->_Offset;
 
-        if (--_Size == 0) _Back = NULL;
+        if (--_Size == 0) _Back = nullptr;
 
         return (*this);
     }
@@ -632,12 +632,12 @@ class FakeList {
         if (_Size == 0) throw std::out_of_range("FakeList");
 #endif
 
-        if (--_Size == 0) _Front = NULL;
+        if (--_Size == 0) _Front = nullptr;
 
         if (--_Back->_Size == 0) {
             delete _Back;
             _Back = _Prevnode(_Back);
-            if (_Back) _Back->_Next = NULL;
+            if (_Back) _Back->_Next = nullptr;
         }
 
         return (*this);
@@ -759,7 +759,7 @@ class FakeList {
                 _PrevL->_Next = _R;
             }
 
-            if (_R == NULL) {
+            if (_R == nullptr) {
                 //_Back node will be deleted
                 _Back = _PrevL;
             }
@@ -808,27 +808,27 @@ class FakeList {
 
     const_iterator begin() const NOEXCEPT { return const_iterator(_Front, 0); }
 
-    iterator end() NOEXCEPT { return iterator(NULL, 0); }
+    iterator end() NOEXCEPT { return iterator(nullptr, 0); }
 
-    const_iterator end() const NOEXCEPT { return const_iterator(NULL, 0); }
+    const_iterator end() const NOEXCEPT { return const_iterator(nullptr, 0); }
 
     _Ty &front() {
 #if (DEBUG & DEBUG_RANGE_CHECK)
-        if (_Back == NULL) throw std::out_of_range("FakeList");
+        if (_Back == nullptr) throw std::out_of_range("FakeList");
 #endif
         return (*_Front)[0];
     }
 
     const _Ty &front() const {
 #if (DEBUG & DEBUG_RANGE_CHECK)
-        if (_Back == NULL) throw std::out_of_range("FakeList");
+        if (_Back == nullptr) throw std::out_of_range("FakeList");
 #endif
         return (*_Front)[0];
     }
 
     _Ty &back() {
 #if (DEBUG & DEBUG_RANGE_CHECK)
-        if (_Back == NULL) throw std::out_of_range("FakeList");
+        if (_Back == nullptr) throw std::out_of_range("FakeList");
 #endif
 
         return (*_Back)[_Back->_Size - 1];
@@ -836,7 +836,7 @@ class FakeList {
 
     const _Ty &back() const {
 #if (DEBUG & DEBUG_RANGE_CHECK)
-        if (_Back == NULL) throw std::out_of_range("FakeList");
+        if (_Back == nullptr) throw std::out_of_range("FakeList");
 #endif
         return (*_Back)[_Back->_Size - 1];
     }
@@ -908,7 +908,7 @@ class FakeList {
     size_type list_node_length() const {
         size_type _Count = 0;
         node *_Node = _Front;
-        while (_Node != NULL) {
+        while (_Node != nullptr) {
             ++_Count;
             _Node = _Node->_Next;
         }
@@ -921,17 +921,17 @@ class FakeList {
         _Tidy(_Front);
 
         _Size = 0;
-        _Front = NULL;
-        _Back = NULL;
+        _Front = nullptr;
+        _Back = nullptr;
     }
 
     void _Tidy() {
         _Size = 0;
-        _Front = NULL;
-        _Back = NULL;
+        _Front = nullptr;
+        _Back = nullptr;
     }
 
-    void _Tidy(node *_First, node *_End = NULL) {
+    void _Tidy(node *_First, node *_End = nullptr) {
         // delete nods [_First,_End)
         node *_Tmp;
         while (_First != _End) {
@@ -943,7 +943,7 @@ class FakeList {
         }
     }
 
-    size_type _Tidy_n(node *_First, node *_End = NULL) {
+    size_type _Tidy_n(node *_First, node *_End = nullptr) {
         // delete nods [_First,_End) and return number of elements deleted
         size_type _Count = 0;
 
@@ -992,7 +992,7 @@ class FakeList {
     node *_Prevnode(node *_Node) {
         // return NULL if _Node is the head
         node *_Tmp = _Front;
-        while (_Tmp != NULL && _Tmp->_Next != _Node) {
+        while (_Tmp != nullptr && _Tmp->_Next != _Node) {
             _Tmp = _Tmp->_Next;
         }
         return _Tmp;
@@ -1002,7 +1002,7 @@ class FakeList {
         // find the node contains _Pos-th element,it never points to the
         // beginning of a node
         node *_Node = _Front;
-        while (_Node != NULL) {
+        while (_Node != nullptr) {
             if (_Node->_Size >= *_Pos) {
                 break;
             }
@@ -1192,7 +1192,7 @@ class string_builder : public FakeList<char> {
         _Str.clear();
 
         node *_Node = _Front;
-        while (_Node != NULL) {
+        while (_Node != nullptr) {
             _Str.append(&(*_Node)[0], _Node->_Size);
             _Node = _Node->_Next;
         }
